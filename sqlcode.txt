@@ -11,6 +11,36 @@ CREATE TABLE IF NOT EXISTS public.faiz_tablosu
     CONSTRAINT faiz_tablosu_pkey PRIMARY KEY (faiz_id)
 );
 
+CREATE TABLE IF NOT EXISTS public."hesap_açma_talep_tablosu"
+(
+    talep_id integer NOT NULL,
+    talep_eden_id character varying(11) COLLATE pg_catalog."default" NOT NULL,
+    talep_edilen_id character varying(11) COLLATE pg_catalog."default" NOT NULL,
+    kur_id integer NOT NULL,
+    talep_durum integer,
+    CONSTRAINT "hesap_açma_talep_tablosu_pkey" PRIMARY KEY (talep_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.hesap_silme_talep_tablosu
+(
+    talep_id integer NOT NULL,
+    talep_eden_id character varying(11) COLLATE pg_catalog."default" NOT NULL,
+    talep_edilen_id character varying(11) COLLATE pg_catalog."default" NOT NULL,
+    silinecek_hesap_no character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    talep_durumu integer,
+    CONSTRAINT hesap_silme_talep_tablosu_pkey PRIMARY KEY (talep_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.kredi_talep_tablosu
+(
+    talep_id integer NOT NULL,
+    talep_eden_id character varying(11) COLLATE pg_catalog."default" NOT NULL,
+    talep_edilen_id character varying(11) COLLATE pg_catalog."default" NOT NULL,
+    ana_para numeric(10, 2) NOT NULL,
+    "vade_sayısı" integer NOT NULL,
+    talep_durumu integer
+);
+
 CREATE TABLE IF NOT EXISTS public.kurlar_tablosu
 (
     kur_id integer NOT NULL,
@@ -42,7 +72,25 @@ CREATE TABLE IF NOT EXISTS public."müşteri_bilgisi_tablosu"
     telefon_no character varying(11) COLLATE pg_catalog."default" NOT NULL,
     e_posta character varying(50) COLLATE pg_catalog."default" NOT NULL,
     adres text COLLATE pg_catalog."default" NOT NULL,
+    temsilci_id integer,
     CONSTRAINT "müşteri_bilgisi_tablosu_pkey" PRIMARY KEY ("müsteri_no_tc")
+);
+
+CREATE TABLE IF NOT EXISTS public."müşteri_hesap_tablosu"
+(
+    hesap_id integer NOT NULL,
+    "müşteri_no" character varying(11) COLLATE pg_catalog."default" NOT NULL,
+    "hesap_türü" integer NOT NULL,
+    bakiye numeric(10, 2) NOT NULL,
+    CONSTRAINT "müşteri_hesap_tablosu_pkey" PRIMARY KEY (hesap_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.temsilci_tablosu
+(
+    temsilci_id integer NOT NULL,
+    isim_soyisim character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    "şifre" character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT temsilci_tablasu_pkey PRIMARY KEY (temsilci_id)
 );
 
 CREATE TABLE IF NOT EXISTS public."İşlem_tablosu"
@@ -57,4 +105,12 @@ CREATE TABLE IF NOT EXISTS public."İşlem_tablosu"
     tarih date NOT NULL,
     CONSTRAINT "İşlem_tablosu_pkey" PRIMARY KEY (islem_no_id)
 );
+
+ALTER TABLE IF EXISTS public."hesap_açma_talep_tablosu"
+    ADD CONSTRAINT kurlar_tablosu FOREIGN KEY (kur_id)
+    REFERENCES public.kurlar_tablosu (kur_id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
 END;
