@@ -10,7 +10,7 @@ from DataAccess.data import DB
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("BAnk 0F SYStem / banka müdürü panel")
+        self.setWindowTitle("Bank of System / Banka Müdürü Panel")
         self.create_menu()
         self.setMinimumSize(900,500)
         self.open=Window()
@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         
         customer = menubar.addMenu("Müşteri İşlem")
 
-        add_customer = QAction("müşteri Ekleme",self)
+        add_customer = QAction("Müşteri Ekleme",self)
         
         customer.addAction(add_customer)
         
@@ -33,8 +33,8 @@ class MainWindow(QMainWindow):
 
         bank_info=menubar.addMenu("Banka Bilgi")
         
-        bank_transaction = QAction("banka işlem geçmişi ve Deadlock analiz",self)
-        bank_state_info = QAction("banka genel durumu",self)
+        bank_transaction = QAction("Banka İşlem Geçmişi ve Deadlock Analiz",self)
+        bank_state_info = QAction("Banka Genel Durumu",self)
         
         bank_info.addActions([bank_transaction,bank_state_info])
         
@@ -42,21 +42,21 @@ class MainWindow(QMainWindow):
       
         rate_and_interest=menubar.addMenu("Kur ve Faiz")
 
-        add_exchange_rate=QAction("yeni kur ekleme",self)
-        update_exchange_rate=QAction("kur fiyatı belirleme",self)
-        interest=QAction("Kredi ve gecikme faiz oranını belirleme",self)
+        add_exchange_rate=QAction("Yeni Kur Ekleme",self)
+        update_exchange_rate=QAction("Kur Fiyatı Belirleme",self)
+        interest=QAction("Kredi ve Gecikme Faiz Oranını Belirleme",self)
 
         rate_and_interest.addActions([add_exchange_rate,update_exchange_rate,interest])
          
    
  
         salary=menubar.addMenu("Maaş")
-        update_salary=QAction("çalışan maaş  belirleme",self)
+        update_salary=QAction("Çalışan Maaş  Belirleme",self)
         salary.addAction(update_salary)
 
              
         System=menubar.addMenu("Sistem")
-        forward_system=QAction("sistemi ilerletme",self)
+        forward_system=QAction("sistemi İlerletme",self)
         System.addAction(forward_system)
 
         customer.triggered.connect(self.response)
@@ -66,28 +66,28 @@ class MainWindow(QMainWindow):
         System.triggered.connect(self.response)
 
     def response(self,action):
-        if action.text() == "müşteri Ekleme":
+        if action.text() == "Müşteri Ekleme":
             tabtitle = action.text()
             self.open.new_tab(add_customer(),tabtitle)
-        elif action.text() == "banka işlem geçmişi ve Deadlock analiz":
+        elif action.text() == "Banka İşlem Geçmişi ve Deadlock Analiz":
             tabtitle = action.text() 
             self.open.new_tab(bank_transaction(),tabtitle)
-        elif action.text() == "banka genel durumu":
+        elif action.text() == "Banka Genel Durumu":
             tabtitle = action.text() 
             self.open.new_tab(bank_state_info(),tabtitle)
-        elif action.text() == "yeni kur ekleme":
+        elif action.text() == "Yeni Kur Ekleme":
             tabtitle = action.text() 
             self.open.new_tab(add_exchange_rate(),tabtitle)
-        elif action.text() == "kur fiyatı belirleme":
+        elif action.text() == "Kur Fiyatı Belirleme":
             tabtitle = action.text() 
             self.open.new_tab(update_exchange_rate(),tabtitle)
-        elif action.text() == "Kredi ve gecikme faiz oranını belirleme":
+        elif action.text() == "Kredi ve Gecikme Faiz Oranını Belirleme":
             tabtitle = action.text() 
             self.open.new_tab(interest(),tabtitle)
-        elif action.text() == "çalışan maaş  belirleme":
+        elif action.text() == "Çalışan Maaş  Belirleme":
             tabtitle = action.text() 
             self.open.new_tab(update_salary(),tabtitle)
-        elif action.text() == "sistemi ilerletme":
+        elif action.text() == "Sistemi İlerletme":
             tabtitle = action.text() 
             self.open.new_tab(add_exchange_rate(),tabtitle)
             
@@ -97,7 +97,7 @@ class Window(QWidget):
     def __init__(self):
         super().__init__()
         self.tabwidget=QTabWidget()
-        self.tabwidget.addTab(add_customer(),"müşteri Ekleme")
+        self.tabwidget.addTab(add_customer(),"Müşteri Ekleme")
         self.tabwidget.setTabsClosable(True)
         h_box=QHBoxLayout()
         h_box.addWidget(self.tabwidget)
@@ -117,11 +117,11 @@ class add_customer(QWidget):
         f_box = QFormLayout()
         
 
-        self.user_no = QLabel("müşteri no/TÇ no")
+        self.user_no = QLabel("Müşteri No/T.C. No")
         self.user_no_i = QLineEdit()
         
         
-        self.user_name = QLabel("isim soyisim")
+        self.user_name = QLabel("İsim Soyisim")
         self.user_name_i = QLineEdit()
       
 
@@ -129,7 +129,7 @@ class add_customer(QWidget):
         self.user_pass_i = QLineEdit()
 
 
-        self.user_phone = QLabel("telefon no")
+        self.user_phone = QLabel("Telefon Numarası")
         self.user_phone_i = QLineEdit()
 
 
@@ -170,21 +170,21 @@ class add_customer(QWidget):
         query="INSERT INTO public.müşteri_bilgisi_tablosu (müsteri_no_tc, isim_soyisim, şifre, telefon_no, e_posta, adres) VALUES (%s,%s, %s, %s,%s, %s);"
         DB.Query(DB,query,user_No,name,password,phone,mail,address) 
 
-        QMessageBox.about(self,"bildirim","yeni müşteri eklendi")
+        QMessageBox.about(self,"Bildirim","Yeni Müşteri Eklendi")
     
 
 class add_exchange_rate(QWidget):
     def __init__(self):
         super().__init__()
         f_box = QFormLayout()      
-        self.rate_name = QLabel("kur ismi")
+        self.rate_name = QLabel("Kur İsmi")
         self.rate_name_i = QLineEdit()
         
         
-        self.rate_value = QLabel("kur fiyatı")
+        self.rate_value = QLabel("Kur Fiyatı")
         self.rate_value_i = QLineEdit()
 
-        self.save_button = QPushButton("Yeni kuru Kayıt Et")
+        self.save_button = QPushButton("Yeni Kuru Kayıt Et")
         self.save_button.clicked.connect(self.save)
         
         f_box.addWidget(self.rate_name)
@@ -206,7 +206,7 @@ class add_exchange_rate(QWidget):
         query="INSERT INTO public.kurlar_tablosu(kur_id, kur_ismi, kur_fiyatı) VALUES (%s ,%s ,%s);"
         self.raw_data=DB.Query(DB,query,a,name,value) 
         
-        QMessageBox.about(self,"bildirim","yeni kur eklendi")
+        QMessageBox.about(self,"Bildirim","Yeni Kur Eklendi")
 
 class update_exchange_rate(QWidget):
     def __init__(self):
@@ -233,7 +233,7 @@ class update_exchange_rate(QWidget):
     
    
 
-        self.save_button = QPushButton("güncelle")
+        self.save_button = QPushButton("Güncelle")
         self.save_button.clicked.connect(self.save)  
         f_box.addWidget(self.rate_kind_label)
         f_box.addWidget(self.combo_kind)
@@ -246,7 +246,7 @@ class update_exchange_rate(QWidget):
     def onChanged(self, text):
         self.rate_index=self.combo_kind.currentIndex()
         
-        self.rate_amount_label.setText("Anlık "+text +" fiyatı :"+str(self.raw_data[self.rate_index][2]))
+        self.rate_amount_label.setText("Anlık "+text +" Fiyatı :"+str(self.raw_data[self.rate_index][2]))
         self.rate_amount_label.adjustSize()
         
 
@@ -257,7 +257,7 @@ class update_exchange_rate(QWidget):
         DB.Query(DB,query,cur_kind_id,str(self.raw_data[self.rate_index][1]),new_amount,cur_kind_id) 
        
      
-        QMessageBox.about(self,"bildirim","kur fiyatı güncellendi")
+        QMessageBox.about(self,"Bildirim","Kur Fiyatı Güncellendi")
 
 class update_salary(QWidget):
     def __init__(self):
@@ -268,13 +268,13 @@ class update_salary(QWidget):
 
 
         self.textlabel=QLabel()
-        self.textlabel.setText("Anlık maaş miktarı :"+str(self.raw_data[0][1]))
+        self.textlabel.setText("Anlık Maaş Miktarı :"+str(self.raw_data[0][1]))
        
-        self.update_salary_label=QLabel("Yeni maaş miktarı giriniz")
+        self.update_salary_label=QLabel("Yeni Maaş Miktarı Giriniz")
         self.update_salary_label_i = QLineEdit(str(self.raw_data[0][1]))
 
       
-        self.save_button = QPushButton("yeni maaş miktarı belirle")
+        self.save_button = QPushButton("Yeni Maaş Miktarı Belirle")
         self.save_button.clicked.connect(self.save)  
 
         f_box.addWidget(self.textlabel)
@@ -288,7 +288,7 @@ class update_salary(QWidget):
         value=self.update_salary_label_i.text()
         query=" UPDATE public.maaş_tablosu SET maaş_id = 0, maaş_miktarı=%s WHERE  maaş_id=0;"
         self.raw_data=DB.Query(DB,query,value) 
-        QMessageBox.about(self,"bildirim","yeni maaş miktarı belirlendi")
+        QMessageBox.about(self,"Bildirim","Yeni Maaş Miktarı Belirlendi")
 
 
 
@@ -299,14 +299,14 @@ class interest(QWidget):
         query= "SELECT * FROM public.faiz_tablosu ORDER BY faiz_id ASC "
         self.raw_data=DB.Query(DB,query) 
         self.textlabel=QLabel()
-        self.textlabel.setText("Anlık kredi faiz oranı :"+str(self.raw_data[0][2])+" \nAnlık geçikme faiz oranı :"+str(self.raw_data[1][2]))
+        self.textlabel.setText("Anlık Kredi Faiz Oranı :"+str(self.raw_data[0][2])+" \nAnlık Gecikme Faiz Oranı :"+str(self.raw_data[1][2]))
        
         self.interest_label=QLabel("Yeni kredi faiz oranı giriniz")
         self.interest_label_i = QLineEdit(str(self.raw_data[0][2]))
-        self.delay_interest_label=QLabel("Yeni geçikme faiz oranı giriniz")
+        self.delay_interest_label=QLabel("Yeni Gecikme Faiz Oranı Giriniz")
         self.delay_interest_label_i = QLineEdit(str(self.raw_data[1][2]))
 
-        self.save_button = QPushButton("kaydet")
+        self.save_button = QPushButton("Kaydet")
         self.save_button.clicked.connect(self.save)  
 
         f_box.addWidget(self.textlabel)
@@ -324,7 +324,7 @@ class interest(QWidget):
         self.raw_data=DB.Query(DB,query,interest_value) 
         query= "UPDATE public.faiz_tablosu SET faiz_id = 1, faiz_adı='geçikme faizi', faiz_miktarı=%s WHERE faiz_id=1;"
         self.raw_data=DB.Query(DB,query,delay_interest_value) 
-        QMessageBox.about(self,"bildirim","faiz oranları güncellendi")
+        QMessageBox.about(self,"Bildirim","Faiz Oranları Güncellendi")
 
 class bank_transaction(QWidget):
     def __init__(self):
@@ -345,12 +345,12 @@ class bank_transaction(QWidget):
         self.table.horizontalHeader().setStretchLastSection(True) 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-        self.textlabel=QLabel("işlem miktarı :"+str(a))
-        self.bank_transaction=QLabel("görmek istediğiniz işlem miktarı giriniz")
+        self.textlabel=QLabel("İşlem Miktarı :"+str(a))
+        self.bank_transaction=QLabel("Görmek İstediğiniz İşlem Miktarı Giriniz")
         self.bank_transaction_i = QLineEdit(str(a))
-        self.load_button = QPushButton("işlemleri listele")
+        self.load_button = QPushButton("İşlemleri Listele")
         self.load_button.clicked.connect(self.load)
-        self.Deadlock_button = QPushButton("listelenen işlemler Deadlock analizi yap")
+        self.Deadlock_button = QPushButton("Listelenen İşlemlere Deadlock Analizi Yap")
         self.Deadlock_button.clicked.connect(self.Deadlock)  
 
         f_box.addWidget(self.textlabel)
@@ -402,7 +402,7 @@ class bank_state_info(QWidget):
         self.table.horizontalHeader().setStretchLastSection(True) 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)      
         
-        self.load_button = QPushButton("listele")
+        self.load_button = QPushButton("Listele")
         self.load_button.clicked.connect(self.load)
         
         h_box.addWidget(self.load_button)
