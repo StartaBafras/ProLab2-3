@@ -124,9 +124,15 @@ class credit_requst_user(QWidget):
         f_box.addWidget(self.credit_term_i)
         f_box.addWidget(self.save_button)
         self.setLayout(f_box)
+
+
     def request(self):
+
         main_money = self.main_money_i.text()
         term = self.credit_term_i.text()
+        query="INSERT INTO public.kredi_talep_tablosu talep_id, talep_eden_id, talep_edilen_id, ana_para, vade_sayısı, talep_durumu)VALUES (?, ?, ?, ?, ?, ?);"
+        raw_data=DB.Query(DB,query,None,None,2,main_money,query,0) 
+
        
         print(main_money,term)
         QMessageBox.about(self,"bildirim","talep alındı")
@@ -462,6 +468,10 @@ class delete_user_account(QWidget):
         QMessageBox.about(self,"bildirim","Hesap silme talebi alındı")
 
 
+# aktif kullanıcı bilgileri 
+active_user_no=""
+active_user_name=""
+active_user_agent_no=-1
 
 class Login(QDialog):
     def __init__(self, parent=None):
@@ -488,9 +498,12 @@ class Login(QDialog):
         user=self.user_i.text()
         password=self.password_i.text()
         
-        query="SELECT * FROM public.musteri where  musteri_id=%s and musteri_tc =%s "
-        result=DB.Query(DB,query,user,password) 
-        print(result)
+        query="SELECT * FROM public.müşteri_bilgisi_tablosu where müsteri_no_tc=%s and şifre =%s "
+        result=DB.Query(DB,query,user,password)
+        active_user_no=result[0][0]
+        active_user_name=result[0][1]
+        active_user_agent_no=result[0][6]
+        print(result,active_user_no,active_user_name,active_user_agent_no)
         if(result == [] or result==None):
             QMessageBox.warning(
                 self, 'Error', 'müşteri no veya şifre yanlış')
@@ -498,15 +511,16 @@ class Login(QDialog):
            self.accept()
 
 
-"""if __name__ == '__main__':
+if __name__ == '__main__':
 
     app = QApplication(sys.argv)
     login = Login()
 
     if login.exec_() == QDialog.Accepted:
         Win = MainWindow()
-        sys.exit(app.exec_())"""
+        sys.exit(app.exec_())
+"""
 app = QApplication(sys.argv)
 
 Win = MainWindow()
-sys.exit(app.exec_())
+sys.exit(app.exec_())"""
