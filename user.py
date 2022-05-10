@@ -497,20 +497,20 @@ class Login(QDialog):
 
         user=self.user_i.text()
         password=self.password_i.text()
-        
+
         query="SELECT * FROM public.müşteri_bilgisi_tablosu where müsteri_no_tc=%s and şifre =%s "
         result=DB.Query(DB,query,user,password)
 
-
+        print(result)
         if(result == [] or result==None):
             QMessageBox.warning(
-                self, 'Error', 'müşteri no veya şifre yanlış')
+                self, 'Error', 'Müşteri No Veya Şifre Yanlış')
         else:
             active_user_no=result[0][0]
             active_user_name=result[0][1]
-            active_user_agent_no=result[0][6]
             self.accept()
-
+            QMessageBox.about(self, 'Hoş Geldiniz', "PiBank'a Hoş Geldin " + active_user_name)
+            
 
 if __name__ == '__main__':
 
