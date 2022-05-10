@@ -9,7 +9,6 @@ from DataAccess.data import DB
 
 
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -88,6 +87,7 @@ class MainWindow(QMainWindow):
         elif action.text() == "hesap silme talebi oluştur":
             tabtitle = action.text() 
             self.open.new_tab(delete_user_account(),tabtitle)
+
 class Window(QWidget):
     def __init__(self):
         super().__init__()
@@ -104,7 +104,8 @@ class Window(QWidget):
         self.tabwidget.removeTab(index)
     def new_tab(self,w_name,tabtitle):
         self.tabwidget.addTab(w_name,tabtitle)
-class credit_requst_user(QWidget):
+
+class credit_requst_user(QWidget): ## Şu anki faiz oranı ekrana yazdırılacak ve ödenecek borç miktarı onay butonunda gösterilecek.
     def __init__(self):
         super().__init__()
         f_box = QFormLayout()
@@ -127,15 +128,38 @@ class credit_requst_user(QWidget):
 
 
     def request(self):
+        global active_user_no
 
         main_money = self.main_money_i.text()
         term = self.credit_term_i.text()
-        query="INSERT INTO public.kredi_talep_tablosu talep_id, talep_eden_id, talep_edilen_id, ana_para, vade_sayısı, talep_durumu)VALUES (?, ?, ?, ?, ?, ?);"
-        raw_data=DB.Query(DB,query,None,None,2,main_money,query,0) 
 
-       
-        print(main_money,term)
-        QMessageBox.about(self,"bildirim","talep alındı")
+        customer_q = "SELECT temsilci_id FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc=%s;"
+        customer_id = DB.Query(DB,customer_q,active_user_no) #Temsilci id bulundu
+        
+        
+        credit_id = "SELECT talep_id FROM public.kredi_talep_tablosu WHERE talep_id >= all(SELECT talep_id FROM public.kredi_talep_tablosu);"
+        credit_id = DB.Query(DB,credit_id) # Benzersiz anahtarın en son kaçıncı yerde kaldığı bulundu
+
+        query="INSERT INTO public.kredi_talep_tablosu (talep_id, talep_eden_id, talep_edilen_id, ana_para, vade_sayısı, talep_durumu)VALUES (%s, %s, %s, %s, %s, %s);"
+        
+        control_zero = len(credit_id) # İlk giriş olup olmadığı kontrol ediliyor 
+
+        try:
+            if control_zero == 0:
+                raw_data=DB.Query(DB,query,1,active_user_no,customer_id[0][0],main_money,term,0)
+                QMessageBox.error(self,"Bildirim","Talep Alındı")
+
+            else:
+                raw_data=DB.Query(DB,query,credit_id[0][0]+1,active_user_no,customer_id[0][0],main_money,term,0)
+                QMessageBox.error(self,"Bildirim","Talep Alındı")
+
+        except IndexError:
+                QMessageBox.error(self,"Hata","İndex Hatası")
+        
+
+
+
+
 class user_transaction_info(QWidget):
     def __init__(self):
         super().__init__()
@@ -194,26 +218,44 @@ class open_user_account(QWidget):
     
 
     def request(self,i):
+        global active_user_no
+
         cur_kind_id= self.combo_kind.currentIndex()
-        print(cur_kind_id)     
-        QMessageBox.about(self,"bildirim","talep alındı") 
+        print(cur_kind_id)
+
+        customer_q = "SELECT temsilci_id FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc=%s;"
+        customer_id = DB.Query(DB,customer_q,active_user_no)
+
+        query="Select COUNT (talep_id) From public.hesap_açma_talep_tablosu"
+        
+        key_id=DB.Query(DB,query)
+        key=key_id[0]
+
+        save_request="INSERT INTO public.hesap_açma_talep_tablosu (talep_id, talep_eden_id, talep_edilen_id, kur_id, talep_durum)VALUES (%s, %s, %s, %s, %s);"
+
+        DB.Query(DB,save_request,key,active_user_no,customer_id[0][0],cur_kind_id,0)
+        QMessageBox.about(self,"Bildirim","Talep Alındı")
 
 
 
 class update_user_info(QWidget):
+
+    global active_user_no
+
     def __init__(self):
         super().__init__()
+
         f_box = QFormLayout()
-        self.cur_user_no="2020"
+
         query="SELECT* FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc = %s;"
-        self.raw_data=DB.Query(DB,query,self.cur_user_no)
+        self.raw_data=DB.Query(DB,query,active_user_no)
         print(self.raw_data)
 
-        self.user_no = QLabel("müşteri no/TÇ no")
+        self.user_no = QLabel("Müşteri No/T.C No")
         self.user_no_i = QLineEdit(str(self.raw_data[0][0]))
         
         
-        self.user_name = QLabel("isim soyisim")
+        self.user_name = QLabel("İsim Soyisim")
         self.user_name_i = QLineEdit(str(self.raw_data[0][1]))
       
 
@@ -221,7 +263,7 @@ class update_user_info(QWidget):
         self.user_pass_i = QLineEdit(str(self.raw_data[0][2]))
        
 
-        self.user_phone = QLabel("telefon no")
+        self.user_phone = QLabel("Telefon Numarası")
         self.user_phone_i = QLineEdit(str(self.raw_data[0][3]))
 
 
@@ -260,9 +302,11 @@ class update_user_info(QWidget):
         mail = self.user_mail_i.text()
         address=self.user_address_i.text()
         query="UPDATE public. müşteri_bilgisi_tablosu SET  müsteri_no_tc =%s, isim_soyisim=%s, şifre=%s, telefon_no=%s, e_posta=%s, adres=%s WHERE müsteri_no_tc =%s ;"
-        DB.Query(DB,query,user_No,name,password,phone,mail,address,self.cur_user_no) 
+        DB.Query(DB,query,user_No,name,password,phone,mail,address,active_user_no) 
 
-        QMessageBox.about(self,"bildirim","Bilgileriniz güncellendi")
+        QMessageBox.about(self,"Bildirim","Bilgileriniz Başarıyla Güncellendi")
+
+
 class money_withdraw_deposit(QWidget):
     def __init__(self):
         super().__init__()  
@@ -494,12 +538,14 @@ class Login(QDialog):
         self.setLayout(f_box)
 
     def login_control(self):
-
+        global active_user_no
+        global active_user_name
         user=self.user_i.text()
         password=self.password_i.text()
 
         query="SELECT * FROM public.müşteri_bilgisi_tablosu where müsteri_no_tc=%s and şifre =%s "
-        result=DB.Query(DB,query,user,password)
+        result=DB.Query(DB,query,user,password) #Asıl
+        #result=DB.Query(DB,query,1,1)
 
         print(result)
         if(result == [] or result==None):
