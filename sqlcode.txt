@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.hesap_silme_talep_tablosu
     talep_id integer NOT NULL,
     talep_eden_id character varying(11) COLLATE pg_catalog."default" NOT NULL,
     talep_edilen_id character varying(11) COLLATE pg_catalog."default" NOT NULL,
-    silinecek_hesap_no character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    silinecek_hesap_no integer NOT NULL,
     talep_durumu integer,
     CONSTRAINT hesap_silme_talep_tablosu_pkey PRIMARY KEY (talep_id)
 );
@@ -63,7 +63,8 @@ CREATE TABLE IF NOT EXISTS public.kredi_talep_tablosu
     talep_edilen_id character varying(11) COLLATE pg_catalog."default" NOT NULL,
     ana_para numeric(10, 2) NOT NULL,
     "vade_sayısı" integer NOT NULL,
-    talep_durumu integer
+    talep_durumu integer,
+    CONSTRAINT kredi_talep_tablosu_pkey PRIMARY KEY (talep_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.kurlar_tablosu
@@ -79,14 +80,6 @@ CREATE TABLE IF NOT EXISTS public."maaş_tablosu"
     "maaş_id" integer NOT NULL,
     "maaş_miktarı" integer NOT NULL DEFAULT 4250,
     CONSTRAINT "maaş_tablosu_pkey" PRIMARY KEY ("maaş_id")
-);
-
-CREATE TABLE IF NOT EXISTS public.musteri
-(
-    musteri_id integer NOT NULL,
-    musteri_tc integer NOT NULL,
-    musteri_isim character(10)[] COLLATE pg_catalog."default",
-    CONSTRAINT musteri_pkey PRIMARY KEY (musteri_id)
 );
 
 CREATE TABLE IF NOT EXISTS public."müşteri_bilgisi_tablosu"
@@ -134,6 +127,46 @@ CREATE TABLE IF NOT EXISTS public."İşlem_tablosu"
 ALTER TABLE IF EXISTS public."hesap_açma_talep_tablosu"
     ADD CONSTRAINT kurlar_tablosu FOREIGN KEY (kur_id)
     REFERENCES public.kurlar_tablosu (kur_id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public."hesap_açma_talep_tablosu"
+    ADD CONSTRAINT "talep_müşteri" FOREIGN KEY (talep_eden_id)
+    REFERENCES public."müşteri_bilgisi_tablosu" ("müsteri_no_tc") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.hesap_silme_talep_tablosu
+    ADD CONSTRAINT "talep_müşteri" FOREIGN KEY (talep_eden_id)
+    REFERENCES public."müşteri_bilgisi_tablosu" ("müsteri_no_tc") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.kredi_talep_tablosu
+    ADD CONSTRAINT "müşteri_kredi_talep" FOREIGN KEY (talep_eden_id)
+    REFERENCES public."müşteri_bilgisi_tablosu" ("müsteri_no_tc") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public."müşteri_bilgisi_tablosu"
+    ADD CONSTRAINT "müşteri_temsilci" FOREIGN KEY (temsilci_id)
+    REFERENCES public.temsilci_tablosu (temsilci_id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public."müşteri_hesap_tablosu"
+    ADD CONSTRAINT "hesap_müşteri" FOREIGN KEY ("müşteri_no")
+    REFERENCES public."müşteri_bilgisi_tablosu" ("müsteri_no_tc") MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
