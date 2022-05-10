@@ -161,6 +161,9 @@ class add_customer(QWidget):
         self.setLayout(f_box)
 
     def save(self):
+        query=" SELECT temsilci_id, count(temsilci_id) as sıralama FROM public.müşteri_bilgisi_tablosu	group by temsilci_id order by sıralama asc limit 1"
+        raw_data=DB.Query(DB,query,None)
+        
         user_No = self.user_no_i.text()
         name= self.user_name_i.text()
         password = self.user_pass_i.text()
@@ -168,7 +171,7 @@ class add_customer(QWidget):
         mail = self.user_mail_i.text()
         address=self.user_address_i.text()
         query="INSERT INTO public.müşteri_bilgisi_tablosu (müsteri_no_tc, isim_soyisim, şifre, telefon_no, e_posta, adres) VALUES (%s,%s, %s, %s,%s, %s);"
-        DB.Query(DB,query,user_No,name,password,phone,mail,address) 
+        DB.Query(DB,query,user_No,name,password,phone,mail,address,raw_data[0][0]) 
 
         QMessageBox.about(self,"Bildirim","Yeni Müşteri Eklendi")
     
