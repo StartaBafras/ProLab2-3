@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QTabWidget,QWidget,QApplication,QHBoxLayout,QMainWindow,QAction,QFormLayout,QDateEdit,QDateTimeEdit,QHeaderView,QDateTimeEdit
-from PyQt5.QtWidgets import QLabel,QLineEdit,QRadioButton,QPushButton,QMessageBox,QSpinBox,QVBoxLayout,QComboBox,QSpinBox,QTableWidget,QTableWidgetItem
+from PyQt5.QtWidgets import QLabel,QLineEdit,QRadioButton,QPushButton,QMessageBox,QSpinBox,QVBoxLayout,QComboBox,QSpinBox,QTableWidget,QTableWidgetItem,QDialog
 from PyQt5.QtCore import QDate,QDateTime,Qt
 import sys
 from DataAccess.data import DB
@@ -246,6 +246,58 @@ class customer_transaction(QWidget):
             for column_number, data in enumerate(row_data):
                 self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
 
+# aktif temsilci bilgileri 
+active_customer_agent_no=""
+active_customer_agent_name=""
+
+
+class Login(QDialog):
+    def __init__(self, parent=None):
+        super(Login, self).__init__(parent)
+        self.setWindowTitle(" Temsilci Giriş")
+        f_box = QVBoxLayout(self)
+        self.setMinimumSize(300,200)
+        self.user =QLabel("kullanıcı no")
+        self.password =QLabel("sifre")
+        self.user_i = QLineEdit(self)
+        self.password_i = QLineEdit(self)
+        self.buttonLogin = QPushButton('Login', self)
+        self.buttonLogin.clicked.connect(self.login_control)
+        
+        f_box.addWidget(self.user)
+        f_box.addWidget(self.user_i)
+        f_box.addWidget(self.password)
+        f_box.addWidget(self.password_i)
+        f_box.addWidget(self.buttonLogin)
+        self.setLayout(f_box)
+
+    def login_control(self):
+
+        user=self.user_i.text()
+        password=self.password_i.text()
+        
+        query="SELECT * FROM public.temsilci_tablosu where temsilci_id=%s and şifre =%s "
+        result=DB.Query(DB,query,user,password)
+        active_customer_agent_no=result[0][0]
+        active_customer_agent_name=result[0][1]
+        print(result,active_customer_agent_no,active_customer_agent_name)
+        if(result == [] or result==None):
+            QMessageBox.warning(
+                self, 'Error', 'kullanıcı no veya şifre yanlış')
+        else:
+           self.accept()
+
+
+if __name__ == '__main__':
+
+    app = QApplication(sys.argv)
+    login = Login()
+
+    if login.exec_() == QDialog.Accepted:
+        Win = MainWindow()
+        sys.exit(app.exec_())
+"""
 app = QApplication(sys.argv)
 Win = MainWindow()
 sys.exit(app.exec_())
+"""
