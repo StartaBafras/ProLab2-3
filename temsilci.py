@@ -44,10 +44,11 @@ class MainWindow(QMainWindow):
      
         customer_request=menubar.addMenu("Müşteri talep")
 
-        customer_request_account=QAction("müşteri hesap talepleri",self)
+        customer_request_account_open=QAction("müşteri hesap açma talepleri",self)
+        customer_request_account_delete=QAction("müşteri hesap silme talepleri",self)
         customer_request_credit=QAction("müşteri kredi talepleri",self)
 
-        customer_request.addActions([customer_request_account,customer_request_credit])
+        customer_request.addActions([customer_request_account_open,customer_request_account_delete,customer_request_credit])
         customer.triggered.connect(self.response)
         customer_info.triggered.connect(self.response)
         customer_request.triggered.connect(self.response)
@@ -63,13 +64,17 @@ class MainWindow(QMainWindow):
             self.open.new_tab(customer_transaction(),tabtitle)
         elif action.text() == "müşteri genel durumu":
             tabtitle = action.text() 
-            self.open.new_tab(add_exchange_rate(),tabtitle)
-        elif action.text() == "müşteri hesap talepleri":
+            self.open.new_tab(customer_state_info(),tabtitle)
+        elif action.text() == "müşteri hesap açma talepleri":
             tabtitle = action.text() 
-            self.open.new_tab(add_exchange_rate(),tabtitle)
-        elif action.text() == "sistemi ilerletme":
+            self.open.new_tab(customer_request_account_open(),tabtitle)
+        elif action.text() == "müşteri hesap silme talepleri":
             tabtitle = action.text() 
-            self.open.new_tab(add_exchange_rate(),tabtitle)
+            self.open.new_tab(customer_request_account_delete(),tabtitle)
+        elif action.text() == "müşteri kredi talepleri":
+            tabtitle = action.text() 
+            self.open.new_tab(customer_request_credit(),tabtitle)
+        
 class Window(QWidget):
     def __init__(self):
         super().__init__()
@@ -182,8 +187,10 @@ class delete_and_update_customer(QWidget):
         f_box.addItem(h_box)
         self.setLayout(f_box)
     def load(self):
-        query="SELECT * FROM  public.müşteri_bilgisi_tablosu"
-        raw_data=DB.Query(DB,query,None) 
+        global active_customer_agent_no
+        query="SELECT * FROM  public.müşteri_bilgisi_tablosu where temsilci_id = %s ;"
+        raw_data=DB.Query(DB,query,active_customer_agent_no)
+        print(raw_data,active_customer_agent_no)
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
@@ -250,9 +257,224 @@ class customer_transaction(QWidget):
             for column_number, data in enumerate(row_data):
                 self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
 
+
+
+class customer_request_account_open(QWidget):
+    def __init__(self):
+        super().__init__()
+        f_box = QFormLayout()
+        h_box=QHBoxLayout()
+        table_headers=["Müşteri no","İsim Soyisim","Talebi","Talep No","kur_id"]
+        self.table = QTableWidget()
+        self.table.setColumnCount(5)
+        for col_number, col_data in enumerate(table_headers):
+            self.table.setHorizontalHeaderItem(col_number,QTableWidgetItem(str(col_data)))
+
+        self.table.horizontalHeader().setStretchLastSection(True) 
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.load_button = QPushButton("Talepleri  gör")
+        self.load_button.clicked.connect(self.load)
+        self.accept_button = QPushButton("ONAY")
+        self.accept_button.clicked.connect(self.accepted)
+        self.Not_accept_button = QPushButton("RED")
+        self.Not_accept_button.clicked.connect(self.Notaccepted)
+
+   
+        h_box.addWidget(self.accept_button)
+        h_box.addWidget(self.load_button)
+
+        h_box.addWidget(self.Not_accept_button)  
+        f_box.addWidget(self.table)
+        f_box.addItem(h_box)
+        self.setLayout(f_box)
+    def load(self):
+        global active_customer_agent_no
+        query="SELECT distinct talep_eden_id, isim_soyisim, kur_ismi ,talep_id,k.kur_id FROM public.hesap_açma_talep_tablosu as h ,kurlar_tablosu as k,müşteri_bilgisi_tablosu as m where h.talep_eden_id = m.müsteri_no_tc  and k.kur_id = h.kur_id  and talep_edilen_id = %s and talep_durumu <> 1 and talep_durumu <> 2"
+        raw_data=DB.Query(DB,query,str(active_customer_agent_no) )
+        self.table.setRowCount(0)
+        for row_number, row_data in enumerate(raw_data):
+            self.table.insertRow(row_number)
+            for column_number, data in enumerate(row_data):
+                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+        
+
+
+    def accepted(self):
+        try:
+            user_no= self.table.item(self.table.currentRow(),0).text()
+            account_kind= self.table.item(self.table.currentRow(),4).text()
+            request_no = self.table.item(self.table.currentRow(),3).text()
+            
+            query="UPDATE public.hesap_açma_talep_tablosu SET  talep_durumu=2 WHERE talep_id=%s;"
+            DB.Query(DB,query,request_no )
+            query="SELECT COUNT(hesap_id) FROM public.müşteri_hesap_tablosu;"
+            amount=DB.Query(DB,query,None)
+            a=amount[0][0]
+            a=a+1
+            query="INSERT INTO public.müşteri_hesap_tablosu (hesap_id, müşteri_no, hesap_türü, bakiye) VALUES (%s, %s, %s, %s);"
+            DB.Query(DB,query,a,user_no,account_kind,0)
+            QMessageBox.about(self,"bildirim"," Talep onaylandı")
+            
+            self.load()
+
+        
+        except AttributeError:
+            QMessageBox.about(self,"AttributeError","Listeden herhangi bir seçim yapılmadı")
+   
+    def Notaccepted(self):
+        try:
+            request_no = self.table.item(self.table.currentRow(),3).text()
+            print(request_no)
+            query="UPDATE public.hesap_açma_talep_tablosu SET  talep_durumu=1 WHERE talep_id=%s;"
+            DB.Query(DB,query,request_no )
+            QMessageBox.about(self,"bildirim"," Talep reddedildi")
+            self.load()
+        
+        except AttributeError:
+            QMessageBox.about(self,"AttributeError","Listeden herhangi bir seçim yapılmadı")
+            
+class customer_request_account_delete(QWidget):
+    def __init__(self):
+        super().__init__()
+        f_box = QFormLayout()
+        h_box=QHBoxLayout()
+        table_headers=[" Müşteri no","İsim Soyisim","Talebi","Talep No"]
+        self.table = QTableWidget()
+        self.table.setColumnCount(4)
+        for col_number, col_data in enumerate(table_headers):
+            self.table.setHorizontalHeaderItem(col_number,QTableWidgetItem(str(col_data)))
+
+        self.table.horizontalHeader().setStretchLastSection(True) 
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.load_button = QPushButton("Talepleri  gör")
+        self.load_button.clicked.connect(self.load)
+        self.accept_button = QPushButton("ONAY")
+        self.accept_button.clicked.connect(self.accepted)
+        self.Not_accept_button = QPushButton("RED")
+        self.Not_accept_button.clicked.connect(self.Notaccepted)
+
+   
+        h_box.addWidget(self.accept_button)
+        h_box.addWidget(self.load_button)
+
+        h_box.addWidget(self.Not_accept_button)  
+        f_box.addWidget(self.table)
+        f_box.addItem(h_box)
+        self.setLayout(f_box)
+    def load(self):
+        global active_customer_agent_no
+        query="SELECT distinct talep_eden_id, isim_soyisim,silinecek_hesap_no, talep_id FROM public.hesap_silme_talep_tablosu as h , müşteri_bilgisi_tablosu as m where h.talep_eden_id = m.müsteri_no_tc   and talep_edilen_id = %s and talep_durumu <> 1 and talep_durumu <> 2 "
+        raw_data=DB.Query(DB,query,str(active_customer_agent_no) )
+        self.table.setRowCount(0)
+        for row_number, row_data in enumerate(raw_data):
+            self.table.insertRow(row_number)
+            for column_number, data in enumerate(row_data):
+                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+        
+
+    def accepted(self):
+        try:
+            request_no = self.table.item(self.table.currentRow(),3).text()
+            account_no=self.table.item(self.table.currentRow(),2).text()
+
+            print(request_no)
+            query="DELETE FROM public.hesap_silme_talep_tablosu  WHERE talep_id=%s;"
+            DB.Query(DB,query,request_no )
+            
+            query="DELETE FROM public.müşteri_hesap_tablosu WHERE hesap_id = %s ;"
+            DB.Query(DB,query,account_no)
+
+
+        
+            self.load()
+            QMessageBox.about(self,"bildirim"," Talep onaylandı")
+        
+        except AttributeError:
+            QMessageBox.about(self,"AttributeError","Listeden herhangi bir seçim yapılmadı")
+   
+   
+    def Notaccepted(self):
+        try:
+            request_no = self.table.item(self.table.currentRow(),3).text()
+            print(request_no)
+            query="UPDATE public.hesap_silme_talep_tablosu SET  talep_durumu=1 WHERE talep_id=%s;"
+            DB.Query(DB,query,request_no )
+            QMessageBox.about(self,"bildirim"," Talep reddedildi")
+            self.load()
+        
+        except AttributeError:
+            QMessageBox.about(self,"AttributeError","Listeden herhangi bir seçim yapılmadı")
+
+   
+
+
+class customer_request_credit(QWidget):
+    def __init__(self):
+        super().__init__()
+        f_box = QFormLayout()
+        h_box=QHBoxLayout()
+        table_headers=["Müşteri No","İsim Soyisim","Ana para","Vade Sayısı","Talep NO"]
+        self.table = QTableWidget()
+        self.table.setColumnCount(5)
+        for col_number, col_data in enumerate(table_headers):
+            self.table.setHorizontalHeaderItem(col_number,QTableWidgetItem(str(col_data)))
+
+        self.table.horizontalHeader().setStretchLastSection(True) 
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.load_button = QPushButton("Talepleri  Gör")
+        self.load_button.clicked.connect(self.load)
+        self.accept_button = QPushButton("ONAY")
+        self.accept_button.clicked.connect(self.accepted)
+        self.Not_accept_button = QPushButton("RED")
+        self.Not_accept_button.clicked.connect(self.Notaccepted)
+
+   
+        h_box.addWidget(self.accept_button)
+        h_box.addWidget(self.load_button)
+
+        h_box.addWidget(self.Not_accept_button)  
+      
+        f_box.addWidget(self.table)
+        f_box.addItem(h_box)
+        self.setLayout(f_box)
+    def load(self):
+        global active_customer_agent_no
+        query="SELECT * FROM public.kredi_talep_tablosu where talep_edilen_id=%s and talep_durumu <> 1 and talep_durumu <> 2;"
+        raw_data=DB.Query(DB,query,str(active_customer_agent_no) )
+        self.table.setRowCount(0)
+        for row_number, row_data in enumerate(raw_data):
+            self.table.insertRow(row_number)
+            for column_number, data in enumerate(row_data):
+                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+    def accepted(self):
+        try:
+            request_no = self.table.item(self.table.currentRow(),4).text()
+            print(request_no)
+            query="UPDATE public.kredi_talep_tablosu SET  talep_durumu=2 WHERE talep_id=%s;"
+            DB.Query(DB,query,request_no )
+            QMessageBox.about(self,"bildirim"," Talep onaylandı")
+            self.load()
+        
+        except AttributeError:
+            QMessageBox.about(self,"AttributeError","Listeden herhangi bir seçim yapılmadı")
+   
+    def Notaccepted(self):
+        try:
+            request_no = self.table.item(self.table.currentRow(),4).text()
+            print(request_no)
+            query="UPDATE public.kredi_talep_tablosu SET  talep_durumu=1 WHERE talep_id=%s;"
+            DB.Query(DB,query,request_no )
+            QMessageBox.about(self,"bildirim"," Talep reddedildi")
+            self.load()
+        
+        except AttributeError:
+            QMessageBox.about(self,"AttributeError","Listeden herhangi bir seçim yapılmadı")
+   
+
+
 # aktif temsilci bilgileri 
-active_customer_agent_no=""
-active_customer_agent_name=""
+global active_customer_agent_no
+global active_customer_agent_name
 
 
 class Login(QDialog):
@@ -276,6 +498,7 @@ class Login(QDialog):
         self.setLayout(f_box)
 
     def login_control(self):
+        global active_customer_agent_no
 
         user=self.user_i.text()
         password=self.password_i.text()
@@ -287,6 +510,7 @@ class Login(QDialog):
             QMessageBox.warning(
                 self, 'Error', 'kullanıcı no veya şifre yanlış')
         else:
+            
             active_customer_agent_no=result[0][0]
             active_customer_agent_name=result[0][1]
             self.accept()
