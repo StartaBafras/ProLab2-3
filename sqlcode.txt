@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS public."hesap_açma_talep_tablosu"
     talep_eden_id character varying(11) COLLATE pg_catalog."default" NOT NULL,
     talep_edilen_id character varying(11) COLLATE pg_catalog."default" NOT NULL,
     kur_id integer NOT NULL,
-    talep_durum integer,
+    talep_durumu integer,
     CONSTRAINT "hesap_açma_talep_tablosu_pkey" PRIMARY KEY (talep_id)
 );
 
@@ -141,6 +141,14 @@ ALTER TABLE IF EXISTS public."hesap_açma_talep_tablosu"
 
 
 ALTER TABLE IF EXISTS public.hesap_silme_talep_tablosu
+    ADD CONSTRAINT silme_hesap FOREIGN KEY (silinecek_hesap_no)
+    REFERENCES public."müşteri_hesap_tablosu" (hesap_id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.hesap_silme_talep_tablosu
     ADD CONSTRAINT "talep_müşteri" FOREIGN KEY (talep_eden_id)
     REFERENCES public."müşteri_bilgisi_tablosu" ("müsteri_no_tc") MATCH SIMPLE
     ON UPDATE NO ACTION
@@ -167,6 +175,14 @@ ALTER TABLE IF EXISTS public."müşteri_bilgisi_tablosu"
 ALTER TABLE IF EXISTS public."müşteri_hesap_tablosu"
     ADD CONSTRAINT "hesap_müşteri" FOREIGN KEY ("müşteri_no")
     REFERENCES public."müşteri_bilgisi_tablosu" ("müsteri_no_tc") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public."müşteri_hesap_tablosu"
+    ADD CONSTRAINT kur FOREIGN KEY ("hesap_türü")
+    REFERENCES public.kurlar_tablosu (kur_id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
