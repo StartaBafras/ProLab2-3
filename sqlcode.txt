@@ -3,6 +3,14 @@
 BEGIN;
 
 
+CREATE TABLE IF NOT EXISTS public."banka_müdür_tablosu"
+(
+    "banka_müdür_id" integer NOT NULL,
+    isim_soyisim character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    "şifre" character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT "banka_müdür_tablosu_pkey" PRIMARY KEY ("banka_müdür_id")
+);
+
 CREATE TABLE IF NOT EXISTS public.faiz_tablosu
 (
     faiz_id integer NOT NULL,
@@ -31,6 +39,23 @@ CREATE TABLE IF NOT EXISTS public.hesap_silme_talep_tablosu
     CONSTRAINT hesap_silme_talep_tablosu_pkey PRIMARY KEY (talep_id)
 );
 
+CREATE TABLE IF NOT EXISTS public.kredi_tablosu
+(
+    kredi_id integer NOT NULL,
+    kredi_sahibi_no character varying(11) COLLATE pg_catalog."default" NOT NULL,
+    "alınna_ana_para" numeric(10, 2) NOT NULL,
+    "alınan_faiz" numeric(10, 2) NOT NULL,
+    "faiz_oranı" numeric(10, 2) NOT NULL,
+    "gecikme_faiz_oranı" numeric(10, 2) NOT NULL,
+    "ödenen_ay" integer NOT NULL,
+    "vade_sayısı" integer NOT NULL,
+    "ödenen_ana_para" numeric(10, 2) NOT NULL,
+    "ödenen_faiz" numeric(10, 2) NOT NULL,
+    "gecikme_ayı" integer NOT NULL DEFAULT 0,
+    verilme_tarih date NOT NULL,
+    CONSTRAINT kredi_tablosu_pkey PRIMARY KEY (kredi_id)
+);
+
 CREATE TABLE IF NOT EXISTS public.kredi_talep_tablosu
 (
     talep_id integer NOT NULL,
@@ -52,7 +77,7 @@ CREATE TABLE IF NOT EXISTS public.kurlar_tablosu
 CREATE TABLE IF NOT EXISTS public."maaş_tablosu"
 (
     "maaş_id" integer NOT NULL,
-    "maaş_miktarı" integer NOT NULL,
+    "maaş_miktarı" integer NOT NULL DEFAULT 4250,
     CONSTRAINT "maaş_tablosu_pkey" PRIMARY KEY ("maaş_id")
 );
 
