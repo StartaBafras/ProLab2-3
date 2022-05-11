@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS public."işlem_tablosu"
     islem_no_id integer NOT NULL,
     "islem_kaynak" character varying(20) COLLATE pg_catalog."default" NOT NULL,
     islem_hedef character varying(20) COLLATE pg_catalog."default" NOT NULL,
-    "işlem_çeşidi" character varying(20) NOT NULL,
+    "işlem_çeşidi" integer NOT NULL,
     tutar numeric(10, 2) NOT NULL,
     kaynak_bakiye numeric(20, 2) NOT NULL,
     hedef_bakiye numeric(20, 2) NOT NULL,
