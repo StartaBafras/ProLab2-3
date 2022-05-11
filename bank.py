@@ -270,7 +270,10 @@ class update_salary(QWidget):
         super().__init__()
         f_box = QFormLayout()
         query="SELECT*FROM maaş_tablosu order by maaş_id"
-        self.raw_data=DB.Query(DB,query) 
+        self.raw_data=DB.Query(DB,query)
+        if(raw_data==None  or raw_data== [] or raw_data[0][0] == None ):
+            query="INSERT INTO public.maaş_tablosu(maaş_id, maaş_miktarı)VALUES (%s, %s);"
+            raw_data=DB.Query(DB,query,1,4000)
 
 
         self.textlabel=QLabel()
