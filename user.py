@@ -182,7 +182,7 @@ class user_transaction_info(QWidget):
         f_box.addItem(h_box)
         self.setLayout(f_box)
     def load(self):
-        query="SELECT * FROM public.İşlem_tablosu ;"
+        query="SELECT * FROM public.işlem_tablosu ;"
         raw_data=DB.Query(DB,query,None) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
@@ -388,7 +388,7 @@ class money_withdraw_deposit(QWidget):
             p_key = str(len(p_key))
             
             save_process_q = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,save_process_q,p_key[0],account_no,user_name[0][0],'Para Çekme',amount,balance,amount_new,'2017-03-14')
+            DB.Query(DB,save_process_q,p_key,account_no,user_name[0][0],'Para Çekme',amount,balance,amount_new,'2017-03-14')
 
             QMessageBox.about(self,"Bildirim",str(amount) + exchange_rate +" çekildi")
             self.load()
@@ -421,7 +421,7 @@ class money_withdraw_deposit(QWidget):
             p_key = str(len(p_key))
                 
             save_process_q = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,save_process_q,p_key[0],account_no,user_name[0][0],'Para Yatırma',amount,balance,amount_new,'2017-03-14')
+            DB.Query(DB,save_process_q,p_key,account_no,user_name[0][0],'Para Yatırma',amount,balance,amount_new,'2017-03-14')
 
             QMessageBox.about(self,"Bildirim",str(amount) + exchange_rate +" yatırıldı")
             self.load()
@@ -445,7 +445,7 @@ class debt_payment(QWidget):
 
         self.amount_money = QLabel("Taksit Tutarı :")
         self.amount_money_i = QLineEdit("0")
-        self.push_button = QPushButton("borçu yatır ")
+        self.push_button = QPushButton("Borcu yatır ")
         self.push_button.clicked.connect(self.push)
 
         h_box.addWidget(self.push_button)
@@ -458,7 +458,7 @@ class debt_payment(QWidget):
         self.setLayout(f_box)
         self.load()
     def load(self):
-        query="SELECT * FROM public.İşlem_tablosu ;"
+        query="SELECT * FROM public.işlem_tablosu ;"
         raw_data=DB.Query(DB,query,None) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
@@ -476,14 +476,16 @@ class money_transfer(QWidget):
         super().__init__()  
         f_box = QFormLayout()
         h_box = QHBoxLayout()
-        table_headers=["İşlem No","Kaynak","Hedef","İşlem","Tutar","Kaynak Bakiye","Hedef Bakiye","Tarih"]
+
+        table_headers=["Hesap No","Bakiye","Birimi"]
         self.table = QTableWidget()
-        self.table.setColumnCount(8)
+        self.table.setColumnCount(3)
         for col_number, col_data in enumerate(table_headers):
             self.table.setHorizontalHeaderItem(col_number,QTableWidgetItem(str(col_data)))
 
         self.table.horizontalHeader().setStretchLastSection(True) 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
 
         self.target_account = QLabel("hedef hesap no ")
         self.target_account_i = QLineEdit()
@@ -507,13 +509,26 @@ class money_transfer(QWidget):
         self.setLayout(f_box)
         self.load()
     def load(self):
-        query="SELECT * FROM public.İşlem_tablosu ;"
-        raw_data=DB.Query(DB,query,None) 
-        self.table.setRowCount(0)
-        for row_number, row_data in enumerate(raw_data):
-            self.table.insertRow(row_number)
-            for column_number, data in enumerate(row_data):
-                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+        query="SELECT hesap_id,bakiye,hesap_türü FROM public.müşteri_hesap_tablosu  WHERE müşteri_no= %s ORDER BY hesap_id;"
+        raw_data=DB.Query(DB,query,active_user_no) 
+
+        if raw_data != None:
+            new_data = []
+
+            exchange_rate_q = "SELECT kur_ismi FROM public.kurlar_tablosu WHERE kur_id=%s"
+
+            for i in raw_data:
+                i = list(i)
+                exchange_rate = DB.Query(DB,exchange_rate_q,i[2])
+                i[2] = exchange_rate[0][0]
+                new_data.append(i)
+                
+
+            self.table.setRowCount(0)
+            for row_number, row_data in enumerate(new_data):
+                self.table.insertRow(row_number)
+                for column_number, data in enumerate(row_data):
+                    self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
 
     def push(self):
         print( "yattı")
@@ -541,7 +556,7 @@ class user_credit_info(QWidget):
         self.load()
 
     def load(self):
-        query="SELECT * FROM public.İşlem_tablosu ;"
+        query="SELECT * FROM public.işlem_tablosu ;"
         raw_data=DB.Query(DB,query,None) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
