@@ -1,4 +1,3 @@
-
 from PyQt5.QtWidgets import QTabWidget,QWidget,QApplication,QHBoxLayout,QMainWindow,QAction,QFormLayout,QDateEdit,QDateTimeEdit,QHeaderView,QDateTimeEdit
 from PyQt5.QtWidgets import QLabel,QLineEdit,QRadioButton,QPushButton,QMessageBox,QSpinBox,QVBoxLayout,QComboBox,QSpinBox,QTableWidget,QTableWidgetItem,QDialog
 from PyQt5.QtCore import QDate,QDateTime,Qt
@@ -144,6 +143,9 @@ class add_customer(QWidget):
     def save(self):
         query=" SELECT temsilci_id, count(temsilci_id) as sıralama FROM public.müşteri_bilgisi_tablosu	group by temsilci_id order by sıralama asc limit 1"
         raw_data=DB.Query(DB,query,None)
+        if(raw_data==None  or raw_data== [] or raw_data[0][0] == None ):
+            query="SELECT temsilci_id, isim_soyisim FROM public.temsilci_tablosu;"
+            raw_data=DB.Query(DB,query,None)
         
         user_No = self.user_no_i.text()
         name= self.user_name_i.text()
@@ -264,7 +266,7 @@ class customer_request_account_open(QWidget):
         super().__init__()
         f_box = QFormLayout()
         h_box=QHBoxLayout()
-        table_headers=["Müşteri no","İsim Soyisim","Talebi","Talep No","kur_id"]
+        table_headers=["Müşteri no","İsim Soyisim","Hesap türü","Talep No","kur_id"]
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         for col_number, col_data in enumerate(table_headers):
@@ -338,7 +340,7 @@ class customer_request_account_delete(QWidget):
         super().__init__()
         f_box = QFormLayout()
         h_box=QHBoxLayout()
-        table_headers=[" Müşteri no","İsim Soyisim","Talebi","Talep No"]
+        table_headers=[" Müşteri no","İsim Soyisim","Silincek Hesap No","Talep No"]
         self.table = QTableWidget()
         self.table.setColumnCount(4)
         for col_number, col_data in enumerate(table_headers):
@@ -413,7 +415,7 @@ class customer_request_credit(QWidget):
         super().__init__()
         f_box = QFormLayout()
         h_box=QHBoxLayout()
-        table_headers=["Müşteri No","İsim Soyisim","Ana para","Vade Sayısı","Talep NO"]
+        table_headers=["Müşteri No","İsim Soyisim","Ana para","Vade Sayısı","Talep No"]
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         for col_number, col_data in enumerate(table_headers):
@@ -439,7 +441,7 @@ class customer_request_credit(QWidget):
         self.setLayout(f_box)
     def load(self):
         global active_customer_agent_no
-        query="SELECT * FROM public.kredi_talep_tablosu where talep_edilen_id=%s and talep_durumu <> 1 and talep_durumu <> 2;"
+        query="SELECT talep_eden_id ,isim_soyisim,ana_para,vade_sayısı,talep_id FROM public.kredi_talep_tablosu as k,public.müşteri_bilgisi_tablosu as m  where m.müsteri_no_tc=k.talep_eden_id  and talep_edilen_id=%s and talep_durumu <> 1 and talep_durumu <> 2;"
         raw_data=DB.Query(DB,query,str(active_customer_agent_no) )
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
@@ -449,9 +451,27 @@ class customer_request_credit(QWidget):
     def accepted(self):
         try:
             request_no = self.table.item(self.table.currentRow(),4).text()
-            print(request_no)
+            customer_no = self.table.item(self.table.currentRow(),0).text()
+            main_money = self.table.item(self.table.currentRow(),2).text()
+            term_amount = self.table.item(self.table.currentRow(),3).text()
+            
+            #talebin onaylasması
             query="UPDATE public.kredi_talep_tablosu SET  talep_durumu=2 WHERE talep_id=%s;"
             DB.Query(DB,query,request_no )
+            #faiz bilgileri alınması
+            query= "SELECT * FROM public.faiz_tablosu ORDER BY faiz_id ASC "
+            raw_data_2=DB.Query(DB,query,None) 
+            #kredi_id alınması
+            query= "SELECT COUNT(kredi_id) FROM public.kredi_tablosu "
+            amount=DB.Query(DB,query,None)
+            a=amount[0][0]
+            a=a+1
+
+        
+            self.credit_time=QDateTimeEdit(QDateTime.currentDateTime())
+            query="INSERT INTO public.kredi_tablosu(kredi_id, kredi_sahibi_no, alınna_ana_para, faiz_oranı, gecikme_faiz_oranı, ödenen_ay,vade_sayısı,ödenen_ana_para,ödenen_faiz, gecikme_ayı, verilme_tarih) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+            DB.Query(DB,query,a,customer_no,main_money,raw_data_2[0][2],raw_data_2[1][2],0,term_amount,0,0,0,self.credit_time.text())
+
             QMessageBox.about(self,"bildirim"," Talep onaylandı")
             self.load()
         
