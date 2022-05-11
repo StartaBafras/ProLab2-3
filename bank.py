@@ -163,6 +163,9 @@ class add_customer(QWidget):
     def save(self):
         query=" SELECT temsilci_id, count(temsilci_id) as sıralama FROM public.müşteri_bilgisi_tablosu	group by temsilci_id order by sıralama asc limit 1"
         raw_data=DB.Query(DB,query,None)
+        if(raw_data==None  or raw_data== [] or raw_data[0][0] == None ):
+            query="SELECT temsilci_id, isim_soyisim FROM public.temsilci_tablosu;"
+            raw_data=DB.Query(DB,query,None)
         
         user_No = self.user_no_i.text()
         name= self.user_name_i.text()
