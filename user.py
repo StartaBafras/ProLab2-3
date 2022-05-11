@@ -371,19 +371,63 @@ class money_withdraw_deposit(QWidget):
             amount = self.amount_money_i.text()
             exchange_rate = self.table.item(self.table.currentRow(),2).text()
 
-            query="UPDATE public.müşteri_hesap_tablosu SET bakiye=%s  WHERE hesap_id=%s;"
-            amount = float(float(balance)-float(amount))
-            DB.Query(DB,query,(amount),account_no)
+            balance_query="UPDATE public.müşteri_hesap_tablosu SET bakiye=%s  WHERE hesap_id=%s;"
+            amount_new = float(float(balance)-float(amount))
+            DB.Query(DB,balance_query,amount_new,account_no)
+            
+
+            actine_user_name_q = "SELECT isim_soyisim FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc = %s"
+            user_name = DB.Query(DB,actine_user_name_q,active_user_no)
+
+            p_key_q="SELECT DISTINCT(islem_no_id) FROM public.işlem_tablosu"
+            p_key = DB.Query(DB,p_key_q)
+
+            if len(p_key) == 0:
+                p_key.append(0)
+            
+            p_key = str(len(p_key))
+            
+            save_process_q = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
+            DB.Query(DB,save_process_q,p_key[0],account_no,user_name[0][0],'Para Çekme',amount,balance,amount_new,'2017-03-14')
+
+            QMessageBox.about(self,"Bildirim",str(amount) + exchange_rate +" çekildi")
             self.load()
-            QMessageBox.about(self,"Bildirim",str(amount) + exchange_rate +"çekildi")
             
         except AttributeError:
-            QMessageBox.about(self,"AttributeError","Listeden herhangi bir seçim yapılmadı")
+            QMessageBox.about(self,"AttributeError","Listeden herhangi bir hesap seçimi yapılmadı")
 
        
     def push(self):
-        print( "yattı")
-        QMessageBox.about(self,"bildirim","Para "+"yatırıldı")
+        try:
+            account_no= self.table.item(self.table.currentRow(),0).text()
+            balance = self.table.item(self.table.currentRow(),1).text()
+            amount = self.amount_money_i.text()
+            exchange_rate = self.table.item(self.table.currentRow(),2).text()
+
+            balance_query="UPDATE public.müşteri_hesap_tablosu SET bakiye=%s  WHERE hesap_id=%s;"
+            amount_new = float(float(balance)+float(amount))
+            DB.Query(DB,balance_query,amount_new,account_no)
+
+
+            actine_user_name_q = "SELECT isim_soyisim FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc = %s"
+            user_name = DB.Query(DB,actine_user_name_q,active_user_no)
+
+            p_key_q="SELECT DISTINCT(islem_no_id) FROM public.işlem_tablosu"
+            p_key = DB.Query(DB,p_key_q)
+
+            if len(p_key) == 0:
+                p_key.append(0)
+                
+            p_key = str(len(p_key))
+                
+            save_process_q = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
+            DB.Query(DB,save_process_q,p_key[0],account_no,user_name[0][0],'Para Yatırma',amount,balance,amount_new,'2017-03-14')
+
+            QMessageBox.about(self,"Bildirim",str(amount) + exchange_rate +" yatırıldı")
+            self.load()
+        
+        except AttributeError:
+            QMessageBox.about(self,"AttributeError","Listeden herhangi bir hesap seçimi yapılmadı")
 
 class debt_payment(QWidget):
     def __init__(self):
