@@ -251,8 +251,39 @@ class customer_transaction(QWidget):
         f_box.addItem(h_box)
         self.setLayout(f_box)
     def load(self):
-        query="SELECT * FROM public.İşlem_tablosu ;"
-        raw_data=DB.Query(DB,query,None) 
+        query="SELECT * from işlem_tablosu where islem_kaynak ::integer In (select  hesap_id from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) ;"
+        raw_data=DB.Query(DB,query,active_customer_agent_no) 
+        self.table.setRowCount(0)
+        for row_number, row_data in enumerate(raw_data):
+            self.table.insertRow(row_number)
+            for column_number, data in enumerate(row_data):
+                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+class customer_state_info(QWidget):
+    def __init__(self):
+        super().__init__()
+        f_box = QFormLayout()
+        h_box=QHBoxLayout()
+        table_headers=["Müşteri No","İsim Soyisim","Toplam Bakiye","Gelir","Gider"]
+        self.table = QTableWidget()
+        self.table.setColumnCount(5)
+        for col_number, col_data in enumerate(table_headers):
+            self.table.setHorizontalHeaderItem(col_number,QTableWidgetItem(str(col_data)))
+
+        self.table.horizontalHeader().setStretchLastSection(True) 
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.load_button = QPushButton(" Müşteri  genel durum gör")
+        self.load_button.clicked.connect(self.load)
+
+   
+        h_box.addWidget(self.load_button)
+      
+        f_box.addWidget(self.table)
+        f_box.addItem(h_box)
+        self.setLayout(f_box)
+        self.load()
+    def load(self):
+        query="SELECT * from işlem_tablosu where islem_kaynak ::integer In (select  hesap_id from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) ;"
+        raw_data=DB.Query(DB,query,active_customer_agent_no) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
