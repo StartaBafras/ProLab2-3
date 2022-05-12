@@ -554,6 +554,11 @@ class customer_request_credit(QWidget):
             query = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
             DB.Query(DB,query,p_key[0][0],'BANKA',account_id,'Kredi verme',main_money,0,new_balance,'2017-03-14')
             
+            #parayı bankadan çekme
+            query="UPDATE public.banka_bilgisi_tablosu SET  banka_anapara=banka_anapara-%s WHERE banka_id=1"
+            DB.Query(DB,query,main_money)
+
+
 
             QMessageBox.about(self,"bildirim"," Talep onaylandı")
             self.load()
@@ -602,6 +607,7 @@ class Login(QDialog):
 
     def login_control(self):
         global active_customer_agent_no
+        global active_customer_agent_name
 
         user=self.user_i.text()
         password=self.password_i.text()
