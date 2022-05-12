@@ -1,3 +1,4 @@
+
 from PyQt5.QtWidgets import QTabWidget,QWidget,QApplication,QHBoxLayout,QMainWindow,QAction,QFormLayout,QDateEdit,QDateTimeEdit,QHeaderView,QDateTimeEdit
 from PyQt5.QtWidgets import QLabel,QLineEdit,QRadioButton,QPushButton,QMessageBox,QSpinBox,QVBoxLayout,QComboBox,QSpinBox,QTableWidget,QTableWidgetItem,QDialog
 from PyQt5.QtCore import QDate,QDateTime,Qt
@@ -250,10 +251,18 @@ class customer_transaction(QWidget):
         f_box.addWidget(self.table)
         f_box.addItem(h_box)
         self.setLayout(f_box)
+        self.load()
     def load(self):
-        query="SELECT * from işlem_tablosu where islem_kaynak ::integer In (select  hesap_id from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) ;"
+        query="SELECT * from işlem_tablosu where islem_kaynak In  (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) ;"
         raw_data=DB.Query(DB,query,active_customer_agent_no) 
         self.table.setRowCount(0)
+        for row_number, row_data in enumerate(raw_data):
+            self.table.insertRow(row_number)
+            for column_number, data in enumerate(row_data):
+                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+                
+        query=" SELECT * from işlem_tablosu where islem_hedef In (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) "
+        raw_data=DB.Query(DB,query,active_customer_agent_no) 
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
             for column_number, data in enumerate(row_data):
@@ -282,7 +291,9 @@ class customer_state_info(QWidget):
         self.setLayout(f_box)
         self.load()
     def load(self):
-        query="SELECT * from işlem_tablosu where islem_kaynak ::integer In (select  hesap_id from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) ;"
+        query="SELECT  h.müşteri_no, isim_soyisim, sum(bakiye) FROM müşteri_bilgisi_tablosu as b ,müşteri_hesap_tablosu as h WHERE h.müşteri_no=b.müsteri_no_tc  and  temsilci_id=%s group by h.müşteri_no ,isim_soyisim;"
+        
+        #query="SELECT * from işlem_tablosu where islem_kaynak ::integer In (select  hesap_id from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) ;"
         raw_data=DB.Query(DB,query,active_customer_agent_no) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
@@ -470,6 +481,7 @@ class customer_request_credit(QWidget):
         f_box.addWidget(self.table)
         f_box.addItem(h_box)
         self.setLayout(f_box)
+        self.load()
     def load(self):
         global active_customer_agent_no
         query="SELECT talep_eden_id ,isim_soyisim,ana_para,vade_sayısı,talep_id FROM public.kredi_talep_tablosu as k,public.müşteri_bilgisi_tablosu as m  where m.müsteri_no_tc=k.talep_eden_id  and talep_edilen_id=%s and talep_durumu <> 1 and talep_durumu <> 2;"
@@ -498,10 +510,47 @@ class customer_request_credit(QWidget):
             a=amount[0][0]
             a=a+1
 
-        
+            #kredi tablosuna bilgilerin girilmesi 
             self.credit_time=QDateTimeEdit(QDateTime.currentDateTime())
             query="INSERT INTO public.kredi_tablosu(kredi_id, kredi_sahibi_no, alınna_ana_para, faiz_oranı, gecikme_faiz_oranı, ödenen_ay,vade_sayısı,ödenen_ana_para,ödenen_faiz, gecikme_ayı, verilme_tarih) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
             DB.Query(DB,query,a,customer_no,main_money,raw_data_2[0][2],raw_data_2[1][2],0,term_amount,0,0,0,self.credit_time.text())
+            
+            #kredinini hesaba aktarılması
+            #hesap var mı?
+            query="SELECT * FROM müşteri_hesap_tablosu WHERE  müşteri_no=%s AND  hesap_türü=0"
+            raw_data_3=DB.Query(DB,query,customer_no)
+            account_id=0
+            new_balance=0
+            if(raw_data_3 != [] and raw_data_3!=None and None!=raw_data_3[0][3] ):
+                new_balance=float(raw_data_3[0][3])
+                account_id=raw_data_3[0][0]
+            
+            #hesap yoksa
+            if(raw_data_3 == [] or raw_data_3==None):
+                
+                query="SELECT COUNT ( hesap_id) FROM public.müşteri_hesap_tablosu;"
+                amount=DB.Query(DB,query,None)
+                a=amount[0][0]
+                a=a+1
+                account_id=a
+                 
+                query="INSERT INTO public.müşteri_hesap_tablosu(hesap_id,müşteri_no, hesap_türü, bakiye) VALUES (%s, %s, %s, %s);"
+                raw_data_3=DB.Query(DB,query,a,customer_no,0,0)
+                new_balance=0
+                QMessageBox.about(self,"bildirim"," hesap açıldı")
+            
+            #parayı yatırma
+            curent_balance=new_balance+float(main_money)
+            
+            query="UPDATE public.müşteri_hesap_tablosu SET  bakiye=%s WHERE hesap_id=%s "
+            raw_data_3=DB.Query(DB,query,curent_balance,account_id)
+                
+            #işlem tablosuna ekleme
+            query="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu"
+            p_key = DB.Query(DB,query)
+            query = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
+            DB.Query(DB,query,p_key[0][0],'BANKA',account_id,'Kredi verme',main_money,0,new_balance,'2017-03-14')
+            
 
             QMessageBox.about(self,"bildirim"," Talep onaylandı")
             self.load()
