@@ -514,9 +514,13 @@ class customer_request_credit(QWidget):
             a=a+1
 
             #kredi tablosuna bilgilerin girilmesi 
-            self.credit_time=QDateTimeEdit(QDateTime.currentDateTime())
+            
+            
+            #zamanı alma
+            query_date="SELECT * FROM public.banka_bilgisi_tablosu ORDER BY banka_id ASC "
+            date_time=DB.Query(DB,query_date,None)
             query="INSERT INTO public.kredi_tablosu(kredi_id, kredi_sahibi_no, alınna_ana_para, faiz_oranı, gecikme_faiz_oranı, ödenen_ay,vade_sayısı,ödenen_ana_para,ödenen_faiz, gecikme_ayı, verilme_tarih) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,query,a,customer_no,main_money,raw_data_2[0][2],raw_data_2[1][2],0,term_amount,0,0,0,self.credit_time.text())
+            DB.Query(DB,query,a,customer_no,main_money,raw_data_2[0][2],raw_data_2[1][2],0,term_amount,0,0,0,date_time[0][2])
             
             #kredinini hesaba aktarılması
             #hesap var mı?
@@ -552,7 +556,7 @@ class customer_request_credit(QWidget):
             query="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu"
             p_key = DB.Query(DB,query)
             query = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,query,p_key[0][0],'BANKA',account_id,'Kredi verme',main_money,0,new_balance,'2017-03-14')
+            DB.Query(DB,query,p_key[0][0],'BANKA',account_id,'Kredi verme',main_money,0,new_balance,date_time[0][2])
             
             #parayı bankadan çekme
             query="UPDATE public.banka_bilgisi_tablosu SET  banka_anapara=banka_anapara-%s WHERE banka_id=1"
