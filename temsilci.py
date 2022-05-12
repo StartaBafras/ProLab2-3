@@ -405,6 +405,8 @@ class customer_request_account_delete(QWidget):
         f_box.addWidget(self.table)
         f_box.addItem(h_box)
         self.setLayout(f_box)
+        self.load()
+        
     def load(self):
         global active_customer_agent_no
         query="SELECT distinct talep_eden_id, isim_soyisim,silinecek_hesap_no, talep_id FROM public.hesap_silme_talep_tablosu as h , müşteri_bilgisi_tablosu as m where h.talep_eden_id = m.müsteri_no_tc   and talep_edilen_id = %s and talep_durumu <> 1 and talep_durumu <> 2 "
@@ -421,17 +423,18 @@ class customer_request_account_delete(QWidget):
             request_no = self.table.item(self.table.currentRow(),3).text()
             account_no=self.table.item(self.table.currentRow(),2).text()
 
-            print(request_no)
-            query="DELETE FROM public.hesap_silme_talep_tablosu  WHERE talep_id=%s;"
+            print(request_no) 
+            query="DELETE FROM public.hesap_silme_talep_tablosu  WHERE talep_id=%s ;"
             DB.Query(DB,query,request_no )
             
-            query="DELETE FROM public.müşteri_hesap_tablosu WHERE hesap_id = %s ;"
-            DB.Query(DB,query,account_no)
+            query="DELETE FROM public.müşteri_hesap_tablosu WHERE hesap_id = %s AND bakiye =0 RETURNING * ;"
+            raw_data=DB.Query(DB,query,account_no)
+            if(raw_data == [] or raw_data==None  ):
+                QMessageBox.about(self,"AttributeError","bakiye sıfır olamdığından silinmedi !")
 
-
-        
+            else:
+                QMessageBox.about(self,"bildirim"," Talep onaylandı")
             self.load()
-            QMessageBox.about(self,"bildirim"," Talep onaylandı")
         
         except AttributeError:
             QMessageBox.about(self,"AttributeError","Listeden herhangi bir seçim yapılmadı")
