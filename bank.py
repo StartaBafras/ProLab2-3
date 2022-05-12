@@ -163,7 +163,7 @@ class add_customer(QWidget):
     def save(self):
         query=" SELECT temsilci_id, count(temsilci_id) as sıralama FROM public.müşteri_bilgisi_tablosu	group by temsilci_id order by sıralama asc limit 1"
         raw_data=DB.Query(DB,query,None)
-        if(raw_data==None  or raw_data== [] or raw_data[0][0] == None ):
+        if(raw_data==None  or raw_data== []  ):
             query="SELECT temsilci_id, isim_soyisim FROM public.temsilci_tablosu;"
             raw_data=DB.Query(DB,query,None)
         
@@ -271,7 +271,7 @@ class update_salary(QWidget):
         f_box = QFormLayout()
         query="SELECT*FROM maaş_tablosu order by maaş_id"
         self.raw_data=DB.Query(DB,query)
-        if(raw_data==None  or raw_data== [] or raw_data[0][0] == None ):
+        if(self.raw_data==None  or self.raw_data== [] ):
             query="INSERT INTO public.maaş_tablosu(maaş_id, maaş_miktarı)VALUES (%s, %s);"
             raw_data=DB.Query(DB,query,1,4000)
 
@@ -338,7 +338,7 @@ class interest(QWidget):
 class bank_transaction(QWidget):
     def __init__(self):
         super().__init__()
-        query="SELECT COUNT(islem_no_id) FROM public.İşlem_tablosu ;"
+        query="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu ;"
         amount=DB.Query(DB,query,None) 
         
         a=amount[0][0]
@@ -372,9 +372,12 @@ class bank_transaction(QWidget):
         f_box.addWidget(self.table)
         f_box.addItem(h_box)
         self.setLayout(f_box)
+        self.load()
+
     def load(self):
-        query="SELECT * FROM public.İşlem_tablosu ;"
-        raw_data=DB.Query(DB,query,None) 
+        amount=self.bank_transaction_i.text()
+        query="SELECT * FROM public.işlem_tablosu ORDER BY islem_no_id desc LIMIT %s ;"
+        raw_data=DB.Query(DB,query,amount) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
@@ -397,14 +400,12 @@ class bank_transaction(QWidget):
 class bank_state_info(QWidget):
     def __init__(self):
         super().__init__()
-        query="SELECT COUNT(islem_no_id) FROM public.İşlem_tablosu ;"
-        amount=DB.Query(DB,query,None) 
-        
         f_box = QFormLayout()
         h_box= QHBoxLayout()
-        table_headers=["İşlem No","Kaynak","Hedef","İşlem","Tutar","Kaynak Bakiye","Hedef Bakiye","Tarih"]
+
+        table_headers=["Banka Toplam bakiye ","Gelir ","Gider"]
         self.table = QTableWidget()
-        self.table.setColumnCount(8)
+        self.table.setColumnCount(3)
         for col_number, col_data in enumerate(table_headers):
             self.table.setHorizontalHeaderItem(col_number,QTableWidgetItem(str(col_data)))
 
@@ -422,7 +423,7 @@ class bank_state_info(QWidget):
 
 
     def load(self):
-        query="SELECT * FROM public.İşlem_tablosu ;"
+        query="SELECT  banka_anapara FROM public.banka_bilgisi_tablosu;"
         raw_data=DB.Query(DB,query,None) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
