@@ -617,22 +617,26 @@ class delete_user_account(QWidget):
                 for column_number, data in enumerate(row_data):
                     self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
     def delete(self):
-        account_no= self.table.item(self.table.currentRow(),0).text()
+        try:
+            account_no= self.table.item(self.table.currentRow(),0).text()
 
 
-        customer_q = "SELECT temsilci_id FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc=%s;"
-        customer_id = DB.Query(DB,customer_q,active_user_no)
+            customer_q = "SELECT temsilci_id FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc=%s;"
+            customer_id = DB.Query(DB,customer_q,active_user_no)
 
-        query="Select COUNT(talep_id) From public.hesap_silme_talep_tablosu"
-        
-        key_id=DB.Query(DB,query)
-        key=key_id[0]
+            query="Select COUNT(talep_id) From public.hesap_silme_talep_tablosu"
+            
+            key_id=DB.Query(DB,query)
+            key=key_id[0]
 
-        save_request="INSERT INTO public.hesap_silme_talep_tablosu (talep_id, talep_eden_id, talep_edilen_id, silinecek_hesap_no, talep_durumu)VALUES (%s, %s, %s, %s, %s);"
+            save_request="INSERT INTO public.hesap_silme_talep_tablosu (talep_id, talep_eden_id, talep_edilen_id, silinecek_hesap_no, talep_durumu)VALUES (%s, %s, %s, %s, %s);"
 
-        DB.Query(DB,save_request,key,active_user_no,customer_id[0][0],account_no,0)
+            DB.Query(DB,save_request,key,active_user_no,customer_id[0][0],account_no,0)
 
-        QMessageBox.about(self,"Bildirim","Numarası " + account_no+ "olan hesap için hesap silme talebi alındı.")
+            QMessageBox.about(self,"Bildirim","Numarası " + account_no+ " olan hesap için hesap silme talebi alındı.")
+            
+        except AttributeError:
+            QMessageBox.about(self,"AttributeError","Listeden herhangi bir hesap seçimi yapılmadı")
 
 
 # aktif kullanıcı bilgileri 
