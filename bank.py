@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
 
              
         System=menubar.addMenu("Sistem")
-        forward_system=QAction("sistemi İlerletme",self)
+        forward_system=QAction("Sistemi İlerletme",self)
         System.addAction(forward_system)
 
         customer.triggered.connect(self.response)
@@ -89,7 +89,7 @@ class MainWindow(QMainWindow):
             self.open.new_tab(update_salary(),tabtitle)
         elif action.text() == "Sistemi İlerletme":
             tabtitle = action.text() 
-            self.open.new_tab(add_exchange_rate(),tabtitle)
+            self.open.new_tab(forward_system(),tabtitle)
             
 
     
@@ -433,6 +433,33 @@ class bank_state_info(QWidget):
 
 
 
+class forward_system(QWidget):
+    def __init__(self):
+        super().__init__()
+        f_box = QFormLayout()
+        query="SELECT * FROM public.banka_bilgisi_tablosu ORDER BY banka_id ASC "
+        raw_data=DB.Query(DB,query,None)
+          
+
+        self.datetimeedit = QDateEdit(QDate(raw_data[0][2]),self)
+        self.info_label = QLabel("Buaray bilgilendirme yazılacak")
+        self.forward_button = QPushButton("Sistemi ilerletme")
+        self.forward_button.clicked.connect(self.load)
+        
+        f_box.addWidget(self.info_label)
+        f_box.addWidget(self.datetimeedit)
+        f_box.addWidget(self.forward_button)
+       
+        self.setLayout(f_box)
+
+
+    def load(self):
+        time_date=self.datetimeedit.text()
+        
+        query="UPDATE public.banka_bilgisi_tablosu SET banka_tarih=%s WHERE banka_id=1; "
+        raw_data=DB.Query(DB,query,time_date)
+
+        QMessageBox.about(self,"Bildirim","Sistem ilerledi"+time_date)
 
 
 
