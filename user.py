@@ -570,18 +570,20 @@ class user_credit_info(QWidget):
 
 
 class delete_user_account(QWidget):
+    global active_user_no
     def __init__(self):
         super().__init__()  
         f_box = QFormLayout()
         h_box = QHBoxLayout()
-        table_headers=["İşlem No","Kaynak","Hedef","İşlem","Tutar","Kaynak Bakiye","Hedef Bakiye","Tarih"]
+        table_headers=["Hesap No","Bakiye","Birimi"]
         self.table = QTableWidget()
-        self.table.setColumnCount(8)
+        self.table.setColumnCount(3)
         for col_number, col_data in enumerate(table_headers):
             self.table.setHorizontalHeaderItem(col_number,QTableWidgetItem(str(col_data)))
 
         self.table.horizontalHeader().setStretchLastSection(True) 
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) 
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
         self.delete_button = QPushButton("Hesabı Sil")
         self.delete_button.clicked.connect(self.delete)
 
@@ -594,15 +596,43 @@ class delete_user_account(QWidget):
         self.load()
 
     def load(self):
-        query="SELECT * FROM public.işlem_tablosu ;"
-        raw_data=DB.Query(DB,query,None) 
-        self.table.setRowCount(0)
-        for row_number, row_data in enumerate(raw_data):
-            self.table.insertRow(row_number)
-            for column_number, data in enumerate(row_data):
-                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+        query="SELECT hesap_id,bakiye,hesap_türü FROM public.müşteri_hesap_tablosu  WHERE müşteri_no= %s ORDER BY hesap_id;"
+        raw_data=DB.Query(DB,query,active_user_no) 
+
+        if raw_data != None:
+            new_data = []
+
+            exchange_rate_q = "SELECT kur_ismi FROM public.kurlar_tablosu WHERE kur_id=%s"
+
+            for i in raw_data:
+                i = list(i)
+                exchange_rate = DB.Query(DB,exchange_rate_q,i[2])
+                i[2] = exchange_rate[0][0]
+                new_data.append(i)
+                
+
+            self.table.setRowCount(0)
+            for row_number, row_data in enumerate(new_data):
+                self.table.insertRow(row_number)
+                for column_number, data in enumerate(row_data):
+                    self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
     def delete(self):
-        QMessageBox.about(self,"bildirim","Hesap silme talebi alındı")
+        account_no= self.table.item(self.table.currentRow(),0).text()
+
+
+        customer_q = "SELECT temsilci_id FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc=%s;"
+        customer_id = DB.Query(DB,customer_q,active_user_no)
+
+        query="Select COUNT(talep_id) From public.hesap_silme_talep_tablosu"
+        
+        key_id=DB.Query(DB,query)
+        key=key_id[0]
+
+        save_request="INSERT INTO public.hesap_silme_talep_tablosu (talep_id, talep_eden_id, talep_edilen_id, silinecek_hesap_no, talep_durumu)VALUES (%s, %s, %s, %s, %s);"
+
+        DB.Query(DB,save_request,key,active_user_no,customer_id[0][0],account_no,0)
+
+        QMessageBox.about(self,"Bildirim","Numarası " + account_no+ "olan hesap için hesap silme talebi alındı.")
 
 
 # aktif kullanıcı bilgileri 
