@@ -753,8 +753,11 @@ class delete_user_account(QWidget):
     def delete(self):
         try:
             account_no= self.table.item(self.table.currentRow(),0).text()
+            account_balance= self.table.item(self.table.currentRow(),1).text()
 
-
+            if(float(account_balance) != 0):
+                QMessageBox.about(self,"Talep Alınamadı","Silme talebinde bulunulacak hesabın bakiyesinin 0 olması gerekmektedir.")
+                return 1
             customer_q = "SELECT temsilci_id FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc=%s;"
             customer_id = DB.Query(DB,customer_q,active_user_no)
 
