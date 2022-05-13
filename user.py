@@ -1,12 +1,9 @@
-from cgi import print_arguments, print_form
-from glob import glob
 from types import NoneType
 from PyQt5.QtWidgets import QTabWidget,QWidget,QApplication,QHBoxLayout,QMainWindow,QAction,QFormLayout,QDateEdit,QDateTimeEdit,QHeaderView,QDateTimeEdit
 from PyQt5.QtWidgets import QLabel,QLineEdit,QRadioButton,QPushButton,QMessageBox,QSpinBox,QVBoxLayout,QComboBox,QSpinBox,QTableWidget,QTableWidgetItem,QDialog
 from PyQt5.QtCore import QDate,QDateTime,Qt
 import sys
 
-from numpy import piecewise
 from DataAccess.data import DB
 
 
@@ -67,7 +64,7 @@ class MainWindow(QMainWindow):
             self.open.new_tab(money_withdraw_deposit(),tabtitle)
         elif action.text() == "kredi borçu ödeme":
             tabtitle = action.text() 
-            self.open.new_tab(debt_payment(),tabtitle)
+            self.open.new_tab(user_credit_info(),tabtitle)
         elif action.text() == "Tranfer yapma":
             tabtitle = action.text() 
             self.open.new_tab(money_transfer(),tabtitle)
@@ -384,9 +381,11 @@ class money_withdraw_deposit(QWidget):
             p_key_q="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu"
             p_key = DB.Query(DB,p_key_q)
 
+            bank_date = "SELECT banka_tarih FROM public.banka_bilgisi_tablosu WHERE banka_id = 0"
+            bank_date = DB.Query(DB,bank_date)
             
             save_process_q = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Çekme',amount,balance,amount_new,'2017-03-14')
+            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Çekme',amount,balance,amount_new,bank_date)
 
             QMessageBox.about(self,"Bildirim",str(amount) + exchange_rate +" çekildi")
             self.load()
@@ -413,10 +412,11 @@ class money_withdraw_deposit(QWidget):
             p_key_q="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu"
             p_key = DB.Query(DB,p_key_q)
 
-            
+            bank_date = "SELECT banka_tarih FROM public.banka_bilgisi_tablosu WHERE banka_id = 0"
+            bank_date = DB.Query(DB,bank_date)
                 
             save_process_q = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Yatırma',amount,balance,amount_new,'2017-03-14')
+            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Yatırma',amount,balance,amount_new,bank_date)
 
             QMessageBox.about(self,"Bildirim",str(amount) + exchange_rate +" yatırıldı")
             self.load()
@@ -579,9 +579,13 @@ class money_transfer(QWidget):
             target_account_amount="SELECT bakiye::float FROM public.müşteri_hesap_tablosu WHERE hesap_id = %s"
             t_amount = DB.Query(DB,target_account_amount,target_account_no)
 
+            #tarih alımı
+            bank_date = "SELECT banka_tarih FROM public.banka_bilgisi_tablosu WHERE banka_id = 0"
+            bank_date = DB.Query(DB,bank_date)
+
             #işlemi işlemler tablosuna ekle
             process_update= "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,process_update,p_key,source_account_no,target_account_no,'Para Aktarma',amount,t_amount[0][0],'2017-05-5')
+            DB.Query(DB,process_update,p_key[0][0],source_account_no,target_account_no,'Para Aktarma',amount,source_account_amount,t_amount[0][0],bank_date[0][0])
 
             QMessageBox.about(self,"bildirim","Para Transferi yapıldı")
             self.load()
@@ -628,6 +632,7 @@ class user_credit_info(QWidget):
         self.load()
 
     def load(self):
+        #ALınan kredileri listele
         query="SELECT kredi_id, TRUNC((alınna_ana_para+(alınna_ana_para*faiz_oranı/100))/vade_sayısı), TRUNC(alınna_ana_para+(alınna_ana_para*faiz_oranı/100))-ödenen_ana_para-ödenen_faiz,gecikme_ayı, TRUNC(alınna_ana_para+(alınna_ana_para*faiz_oranı/100)), faiz_oranı FROM public.kredi_tablosu WHERE kredi_sahibi_no = %s ;"
         raw_data=DB.Query(DB,query,active_user_no) 
         self.table.setRowCount(0)
@@ -637,13 +642,13 @@ class user_credit_info(QWidget):
                 self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
 
         
-
+        #Kullanıcının hesaplarını listele
         query ="SELECT DISTINCT h.hesap_id, bakiye, kur_ismi FROM public.müşteri_hesap_tablosu as h INNER JOIN  public.müşteri_bilgisi_tablosu as b ON h.müşteri_no::CHARACTER = b.müsteri_no_tc INNER JOIN public.kurlar_tablosu as k ON k.kur_id = h.hesap_türü WHERE isim_soyisim = %s"
         self.raw_data=DB.Query(DB,query,active_user_name) 
         
 
         self.combo_kind.clear()
-        
+
         if(type(self.raw_data) != NoneType):
             for i in self.raw_data:
                 self.combo_kind.addItem( " Hesap No: " + str(i[0]) + " Bakiye: " + str(i[1]) +  " Kur: " + str(i[2]))
@@ -748,8 +753,11 @@ class delete_user_account(QWidget):
     def delete(self):
         try:
             account_no= self.table.item(self.table.currentRow(),0).text()
+            account_balance= self.table.item(self.table.currentRow(),1).text()
 
-
+            if(float(account_balance) != 0):
+                QMessageBox.about(self,"Talep Alınamadı","Silme talebinde bulunulacak hesabın bakiyesinin 0 olması gerekmektedir.")
+                return 1
             customer_q = "SELECT temsilci_id FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc=%s;"
             customer_id = DB.Query(DB,customer_q,active_user_no)
 
