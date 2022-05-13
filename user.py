@@ -1,5 +1,6 @@
 from cgi import print_arguments, print_form
 from glob import glob
+from types import NoneType
 from PyQt5.QtWidgets import QTabWidget,QWidget,QApplication,QHBoxLayout,QMainWindow,QAction,QFormLayout,QDateEdit,QDateTimeEdit,QHeaderView,QDateTimeEdit
 from PyQt5.QtWidgets import QLabel,QLineEdit,QRadioButton,QPushButton,QMessageBox,QSpinBox,QVBoxLayout,QComboBox,QSpinBox,QTableWidget,QTableWidgetItem,QDialog
 from PyQt5.QtCore import QDate,QDateTime,Qt
@@ -467,6 +468,7 @@ class debt_payment(QWidget):
 
 class money_transfer(QWidget):
     global active_user_no
+    global active_user_name
     def __init__(self):
         super().__init__()  
         f_box = QFormLayout()
@@ -485,13 +487,18 @@ class money_transfer(QWidget):
         self.target_account = QLabel("Hedef Hesap")
         self.combo_kind = QComboBox(self)
 
-        #query="SELECT h.hesap_id b.ad_soyad FROM pulic.müşteri_hesap_tablosu as h, müşteri_bilgi_tablosu as b"
-        query="SELECT b.isim_soyisim, h.hesap_id, k.kur_ismi FROM public.müşteri_hesap_tablosu as h, public.müşteri_bilgisi_tablosu as b, public.kurlar_tablosu as k WHERE h."
-        self.raw_data=DB.Query(DB,query) 
 
-        for i in self.raw_data:
-            self.combo_kind.addItem("Kullanıcı: " + str(i[0]) + " Hesap No: " + str(i[1]))
         
+        # query = "SELECT DISTINCT h.hesap_id, isim_soyisim, kur_ismi FROM public.müşteri_hesap_tablosu as h INNER JOIN  public.müşteri_bilgisi_tablosu as b ON h.hesap_id::CHARACTER = b.müsteri_no_tc INNER JOIN public.kurlar_tablosu as k ON k.kur_id = h.hesap_türü WHERE h.hesap_id <> %s"
+        query ="SELECT DISTINCT h.hesap_id, isim_soyisim, kur_ismi FROM public.müşteri_hesap_tablosu as h INNER JOIN  public.müşteri_bilgisi_tablosu as b ON h.müşteri_no::CHARACTER = b.müsteri_no_tc INNER JOIN public.kurlar_tablosu as k ON k.kur_id = h.hesap_türü WHERE isim_soyisim <> %s"
+        self.raw_data=DB.Query(DB,query,active_user_name) 
+
+
+        
+        if(type(self.raw_data) != NoneType):
+            for i in self.raw_data:
+                self.combo_kind.addItem( " Hesap No: " + str(i[0]) + " Kullanıcı: " + str(i[1]) +  " Kur: " + str(i[2]))
+
 
         self.amount_money = QLabel("TUTAR :")
         self.amount_money_i = QLineEdit("0")
@@ -509,11 +516,12 @@ class money_transfer(QWidget):
         f_box.addItem(h_box)
         self.setLayout(f_box)
 
-        #self.load()
+        self.load()
+
     def load(self):
-        """
-        #query="SELECT hesap_id,bakiye,hesap_türü FROM public.müşteri_hesap_tablosu  WHERE müşteri_no= %s ORDER BY hesap_id;"
-        #raw_data=DB.Query(DB,query,active_user_no) 
+        
+        query="SELECT hesap_id,bakiye,hesap_türü FROM public.müşteri_hesap_tablosu  WHERE müşteri_no= %s ORDER BY hesap_id;"
+        raw_data=DB.Query(DB,query,active_user_no) 
 
         if raw_data != None:
             new_data = []
@@ -531,11 +539,51 @@ class money_transfer(QWidget):
             for row_number, row_data in enumerate(new_data):
                 self.table.insertRow(row_number)
                 for column_number, data in enumerate(row_data):
-                    self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))"""
+                    self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+
 
     def push(self):
-        print( "yattı")
-        QMessageBox.about(self,"bildirim","Para Transferi yapıldı")
+        try:
+            amount = self.amount_money_i.text()
+
+            target_account_no = self.raw_data[self.combo_kind.currentIndex()][0]
+            target_exchange = self.raw_data[self.combo_kind.currentIndex()][2]
+
+
+
+            exchange_q = "SELECT kur_fiyatı::float FROM public.kurlar_tablosu WHERE kur_ismi = %s"
+            target_exchange = DB.Query(DB,exchange_q,target_exchange)
+
+            print(target_exchange[0][0])
+
+            source_account_no= self.table.item(self.table.currentRow(),0).text()
+            source_account_amount = self.table.item(self.table.currentRow(),1).text()
+            source_exchange = self.table.item(self.table.currentRow(),2).text()
+
+            source_exchange = DB.Query(DB,exchange_q,source_exchange)
+
+
+            source_update="UPDATE public.müşteri_hesap_tablosu SET bakiye=bakiye-%s  WHERE hesap_id=%s;"
+            DB.Query(DB,source_update,amount,source_account_no)
+            
+            target_update="UPDATE public.müşteri_hesap_tablosu SET bakiye=bakiye+%s  WHERE hesap_id=%s;"
+            DB.Query(DB,target_update,((int(amount)*target_exchange[0][0])/float(source_exchange[0][0])),target_account_no)
+
+            p_key_q="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu"
+            p_key = DB.Query(DB,p_key_q)
+
+            target_account_amount="SELECT bakiye::float FROM public.müşteri_hesap_tablosu WHERE hesap_id = %s"
+            t_amount = DB.Query(DB,target_account_amount,target_account_no)
+
+
+            process_update= "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
+            DB.Query(DB,process_update,p_key,source_account_no,target_account_no,'Para Aktarma',amount,t_amount[0][0],'2017-05-5')
+
+            QMessageBox.about(self,"bildirim","Para Transferi yapıldı")
+            self.load()
+
+        except AttributeError:
+            QMessageBox.about(self,"AttributeError","Listeden herhangi bir hesap seçimi yapılmadı")
 
 
 
@@ -634,7 +682,7 @@ class delete_user_account(QWidget):
             DB.Query(DB,save_request,key,active_user_no,customer_id[0][0],account_no,0)
 
             QMessageBox.about(self,"Bildirim","Numarası " + account_no+ " olan hesap için hesap silme talebi alındı.")
-            
+
         except AttributeError:
             QMessageBox.about(self,"AttributeError","Listeden herhangi bir hesap seçimi yapılmadı")
 
