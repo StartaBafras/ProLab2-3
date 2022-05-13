@@ -375,9 +375,9 @@ class bank_transaction(QWidget):
         self.load()
 
     def load(self):
-        amount=self.bank_transaction_i.text()
+        self.amount=self.bank_transaction_i.text()
         query="SELECT * FROM public.işlem_tablosu ORDER BY islem_no_id desc LIMIT %s ;"
-        raw_data=DB.Query(DB,query,amount) 
+        raw_data=DB.Query(DB,query,self.amount) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
@@ -388,11 +388,48 @@ class bank_transaction(QWidget):
 
 
     def Deadlock(self):
-        self.table.setRowCount(0)
-        for row_number, row_data in enumerate(self.raw_data):
-            self.table.insertRow(row_number)
-            for column_number, data in enumerate(row_data):
-                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+        will_want=[]
+        query="SELECT is2.islem_no_id ,is2.islem_kaynak,is2.islem_hedef,is2.tarih FROM public.işlem_tablosu as is1, public.işlem_tablosu as is2  WHERE is2.islem_kaynak=is1.islem_hedef and is2.tarih=is1.tarih group by is2.islem_no_id ORDER BY is2.tarih,is2.islem_no_id ASC LIMIT %s"
+        raw_data=DB.Query(DB,query,self.amount)
+        for j in  range(0,len(raw_data)):
+            will_want.append(raw_data[j][0])
+
+
+
+
+        first_wanted=raw_data[0][1]
+        wanted=raw_data[0][1]
+        wanted_index=0
+        wanted_list=[]
+        wanted_list.append(0)
+
+
+        i=0
+        while i<len(raw_data):
+            if(wanted == raw_data[i][2] ):
+                if(first_wanted==raw_data[i][2] ):
+                    print("as")
+                wanted= raw_data[i][1]
+                print(wanted)
+                wanted_index=i
+                wanted_list.append(raw_data[i][0])
+                print(wanted_index)
+                i=0 
+            i+=1  
+                
+        print(wanted_list)
+        for k in wanted_list:
+            will_want.remove(k)
+        print(will_want)
+        QMessageBox.about(self,"Bildirim","Sistem ilerledi"+str(wanted_list))
+
+            
+
+
+
+        print(raw_data)
+        print("ad")
+        
       
 
 
