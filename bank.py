@@ -457,7 +457,25 @@ class forward_system(QWidget):
         time_date=self.datetimeedit.text()
         
         query="UPDATE public.banka_bilgisi_tablosu SET banka_tarih=%s WHERE banka_id=1; "
-        raw_data=DB.Query(DB,query,time_date)
+        DB.Query(DB,query,time_date)
+        query="SELECT count (temsilci_id) FROM public.temsilci_tablosu; "
+        customer_agent_amount=DB.Query(DB,query,None)
+        print(customer_agent_amount)
+        query="SELECT * FROM public.maaş_tablosu ORDER BY maaş_id ASC  "
+        salary_amount=DB.Query(DB,query,None)
+        print(salary_amount)
+        salary_total=customer_agent_amount[0][0]*salary_amount[0][1]
+        print(salary_total)
+        query="UPDATE public.banka_bilgisi_tablosu SET  banka_anapara=banka_anapara-%s WHERE banka_id=1"
+        DB.Query(DB,query,salary_total)
+
+        #işlemi kaydetme
+        query="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu"
+        p_key = DB.Query(DB,query)
+        query = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
+        DB.Query(DB,query,p_key[0][0],'BANKA','Temsilciler','Maaş ödeme',salary_total,0,0,time_date)
+
+        
 
         QMessageBox.about(self,"Bildirim","Sistem ilerledi"+time_date)
 
