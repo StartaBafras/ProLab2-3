@@ -124,6 +124,21 @@ CREATE TABLE IF NOT EXISTS public."işlem_tablosu"
     CONSTRAINT "İşlem_tablosu_pkey" PRIMARY KEY (islem_no_id)
 );
 
+CREATE TABLE IF NOT EXISTS public.banka_bilgisi_tablosu
+(
+    banka_id integer NOT NULL,
+    banka_anapara numeric(15,2) NOT NULL,
+    banka_tarih date,
+    CONSTRAINT banka_bilgisi_tablosu_pkey PRIMARY KEY (banka_id)
+)
+
+
+ALTER TABLE IF EXISTS public.banka_bilgisi_tablosu
+    OWNER to postgres;
+
+
+
+
 ALTER TABLE IF EXISTS public."hesap_açma_talep_tablosu"
     ADD CONSTRAINT kurlar_tablosu FOREIGN KEY (kur_id)
     REFERENCES public.kurlar_tablosu (kur_id) MATCH SIMPLE
