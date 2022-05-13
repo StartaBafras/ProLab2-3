@@ -670,17 +670,57 @@ class user_credit_info(QWidget):
             exchange_q = "SELECT kur_fiyatı::float FROM public.kurlar_tablosu WHERE kur_ismi = %s"
             source_exchange = DB.Query(DB,exchange_q,source_exchange)
 
+            #krediyi al
+            credit_q ="SELECT * FROM public.kredi_tablosu WHERE kredi_id = %s ;"
+            raw_data=DB.Query(DB,credit_q,target_no) 
+
+            total_payment = 0
+            total_interest = 0
+            total_installment = float(number_of_month)
+
+            if(int(raw_data[0][9]) >0):
+                
+
+                lateness = 0
+                while(float(total_installment) - lateness == 0):
+                    lateness = lateness+1
+                
+                lateness_amount = float(monthly_debt)*lateness*(float(raw_data[0][4])/100)
+
+                total_payment += float(monthly_debt)*lateness
+                total_interest += lateness_amount
+
+                total_installment -= lateness
+            
+            if(total_installment >0):
+
+
+                
+                total_payment += float(monthly_debt)
+                total_interest += float(monthly_debt)*(float(raw_data[0][3])/100)
+
+                total_installment -= 1
+            
+            if(total_installment > 0):
+            
+                total_payment += float(monthly_debt)*total_installment
+
+
+
             #Kaynaktan parayı eksilt
             source_update="UPDATE public.müşteri_hesap_tablosu SET bakiye=bakiye-%s  WHERE hesap_id=%s;"
-            DB.Query(DB,source_update,float(number_of_month)*float(monthly_debt),source_account_no)
+            DB.Query(DB,source_update,(total_payment+total_interest)/float(source_exchange[0][0]),source_account_no)
 
             #Bankayı güncelle
             target_update= "UPDATE public.banka_bilgisi_tablosu SET banka_anapara=banka_anapara+%s WHERE banka_id = 0"
-            DB.Query(DB,target_update,float(source_exchange[0][0])*float(number_of_month)*float(monthly_debt))
+            DB.Query(DB,target_update,(total_payment+total_interest))
 
             #Krediyi güncelle
-            credit_update = "UPDATE public.kredi_tablosu SET ödenen_ana_para=ödenen_ana_para+%s,ödenen_ay = ödenen_ay + %s, gecikme_ayı = gecikme_ayı- %s  WHERE kredi_id=%s;"
-            DB.Query(DB,credit_update,float(source_exchange[0][0])*float(number_of_month)*float(monthly_debt),monthly_debt,monthly_debt,target_no)
+            credit_update = "UPDATE public.kredi_tablosu SET ödenen_ana_para=ödenen_ana_para+%s,ödenen_ay = ödenen_ay + %s, ödenen_faiz = %s,gecikme_ayı = gecikme_ayı- %s  WHERE kredi_id=%s;"
+            #DB.Query(DB,credit_update,float(source_exchange[0][0])*float(number_of_month)*float(monthly_debt),monthly_debt,monthly_debt,target_no)
+
+            DB.Query(DB,credit_update,total_payment,monthly_debt,total_interest,monthly_debt,target_no)
+
 
             #Kayıtlara ekle
             p_key_q="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu"
@@ -690,7 +730,9 @@ class user_credit_info(QWidget):
             bank_info = DB.Query(DB,bank_info)
 
             process_update= "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,process_update,p_key[0][0],source_account_no,'Banka','Kredi Ödemesi',float(source_exchange[0][0])*float(number_of_month)*float(monthly_debt),source_account_balance,bank_info[0][0],bank_info[0][1])
+            #DB.Query(DB,process_update,p_key[0][0],source_account_no,'Banka','Kredi Ödemesi',float(source_exchange[0][0])*float(number_of_month)*float(monthly_debt),source_account_balance,bank_info[0][0],bank_info[0][1])
+
+            DB.Query(DB,process_update,p_key[0][0],source_account_no,'Banka','Kredi Ödemesi',total_payment+total_interest,source_account_balance,bank_info[0][0],bank_info[0][1])
 
             self.load()
             
