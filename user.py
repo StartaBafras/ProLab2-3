@@ -550,7 +550,7 @@ class money_transfer(QWidget):
             target_exchange = self.raw_data[self.combo_kind.currentIndex()][2]
 
 
-
+            #hedef para birimini bul
             exchange_q = "SELECT kur_fiyatı::float FROM public.kurlar_tablosu WHERE kur_ismi = %s"
             target_exchange = DB.Query(DB,exchange_q,target_exchange)
 
@@ -560,22 +560,26 @@ class money_transfer(QWidget):
             source_account_amount = self.table.item(self.table.currentRow(),1).text()
             source_exchange = self.table.item(self.table.currentRow(),2).text()
 
+            #kaynak para birimini bul
             source_exchange = DB.Query(DB,exchange_q,source_exchange)
 
-
+            #kaynağı güncelle
             source_update="UPDATE public.müşteri_hesap_tablosu SET bakiye=bakiye-%s  WHERE hesap_id=%s;"
             DB.Query(DB,source_update,amount,source_account_no)
             
+            #Hedefi güncelle
             target_update="UPDATE public.müşteri_hesap_tablosu SET bakiye=bakiye+%s  WHERE hesap_id=%s;"
             DB.Query(DB,target_update,((int(amount)*target_exchange[0][0])/float(source_exchange[0][0])),target_account_no)
 
+            #anahtarı bul
             p_key_q="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu"
             p_key = DB.Query(DB,p_key_q)
 
+            #hedefin bakiyesini bul
             target_account_amount="SELECT bakiye::float FROM public.müşteri_hesap_tablosu WHERE hesap_id = %s"
             t_amount = DB.Query(DB,target_account_amount,target_account_no)
 
-
+            #işlemi işlemler tablosuna ekle
             process_update= "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
             DB.Query(DB,process_update,p_key,source_account_no,target_account_no,'Para Aktarma',amount,t_amount[0][0],'2017-05-5')
 
@@ -588,32 +592,109 @@ class money_transfer(QWidget):
 
 
 class user_credit_info(QWidget):
+    global active_user_no
     def __init__(self):
         super().__init__()  
         f_box = QFormLayout()
         h_box = QHBoxLayout()
-        table_headers=["İşlem No","Kaynak","Hedef","İşlem","Tutar","Kaynak Bakiye","Hedef Bakiye","Tarih"]
+        table_headers=["Kredi No","Aylık Borç ","Kalan Toplam Borç","Gecikmiş Ödeme (Ay)","Alınan Toplam Para (₺)","Faiz Oranı (%)"]
         self.table = QTableWidget()
-        self.table.setColumnCount(8)
+        self.table.setColumnCount(6)
         for col_number, col_data in enumerate(table_headers):
             self.table.setHorizontalHeaderItem(col_number,QTableWidgetItem(str(col_data)))
 
         self.table.horizontalHeader().setStretchLastSection(True) 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) 
 
+        self.target_account = QLabel("Kaynak Hesap")
+        self.combo_kind = QComboBox(self)
+
+
+        f_box.addWidget(self.target_account)
+        f_box.addWidget(self.combo_kind)
+
+        self.amount_money = QLabel("Taksit Tutarı :")
+        self.amount_money_i = QLineEdit("0")
+        self.push_button = QPushButton("Borcu yatır ")
+        self.push_button.clicked.connect(self.push)
+
+        h_box.addWidget(self.push_button)
+
         f_box.addWidget(self.table)
+        f_box.addWidget(self.amount_money)
+        f_box.addWidget(self.amount_money_i)
         f_box.addItem(h_box)
         self.setLayout(f_box)
         self.load()
 
     def load(self):
-        query="SELECT * FROM public.işlem_tablosu ;"
-        raw_data=DB.Query(DB,query,None) 
+        query="SELECT kredi_id, TRUNC((alınna_ana_para+(alınna_ana_para*faiz_oranı/100))/vade_sayısı), TRUNC(alınna_ana_para+(alınna_ana_para*faiz_oranı/100))-ödenen_ana_para-ödenen_faiz,gecikme_ayı, TRUNC(alınna_ana_para+(alınna_ana_para*faiz_oranı/100)), faiz_oranı FROM public.kredi_tablosu WHERE kredi_sahibi_no = %s ;"
+        raw_data=DB.Query(DB,query,active_user_no) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
             for column_number, data in enumerate(row_data):
                 self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+
+        
+
+        query ="SELECT DISTINCT h.hesap_id, bakiye, kur_ismi FROM public.müşteri_hesap_tablosu as h INNER JOIN  public.müşteri_bilgisi_tablosu as b ON h.müşteri_no::CHARACTER = b.müsteri_no_tc INNER JOIN public.kurlar_tablosu as k ON k.kur_id = h.hesap_türü WHERE isim_soyisim = %s"
+        self.raw_data=DB.Query(DB,query,active_user_name) 
+        
+
+        self.combo_kind.clear()
+        
+        if(type(self.raw_data) != NoneType):
+            for i in self.raw_data:
+                self.combo_kind.addItem( " Hesap No: " + str(i[0]) + " Bakiye: " + str(i[1]) +  " Kur: " + str(i[2]))
+        
+    def push(self):
+        try:
+
+            number_of_month = self.amount_money_i.text()
+
+            target_no= self.table.item(self.table.currentRow(),0).text()
+            monthly_debt = self.table.item(self.table.currentRow(),1).text()
+            target_exchange = self.table.item(self.table.currentRow(),2).text()
+            
+            source_account_no = self.raw_data[self.combo_kind.currentIndex()][0]
+            source_account_balance = self.raw_data[self.combo_kind.currentIndex()][1]
+            source_exchange = self.raw_data[self.combo_kind.currentIndex()][2]
+
+            #Kuru al
+            exchange_q = "SELECT kur_fiyatı::float FROM public.kurlar_tablosu WHERE kur_ismi = %s"
+            source_exchange = DB.Query(DB,exchange_q,source_exchange)
+
+            #Kaynaktan parayı eksilt
+            source_update="UPDATE public.müşteri_hesap_tablosu SET bakiye=bakiye-%s  WHERE hesap_id=%s;"
+            DB.Query(DB,source_update,float(number_of_month)*float(monthly_debt),source_account_no)
+
+            #Bankayı güncelle
+            target_update= "UPDATE public.banka_bilgisi_tablosu SET banka_anapara=banka_anapara+%s WHERE banka_id = 0"
+            DB.Query(DB,target_update,float(source_exchange[0][0])*float(number_of_month)*float(monthly_debt))
+
+            #Krediyi güncelle
+            credit_update = "UPDATE public.kredi_tablosu SET ödenen_ana_para=ödenen_ana_para+%s,ödenen_ay = ödenen_ay + %s, gecikme_ayı = gecikme_ayı- %s  WHERE kredi_id=%s;"
+            DB.Query(DB,credit_update,float(source_exchange[0][0])*float(number_of_month)*float(monthly_debt),monthly_debt,monthly_debt,target_no)
+
+            #Kayıtlara ekle
+            p_key_q="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu"
+            p_key = DB.Query(DB,p_key_q)
+            
+            bank_info = "SELECT banka_anapara, banka_tarih FROM public.banka_bilgisi_tablosu WHERE banka_id = 0"
+            bank_info = DB.Query(DB,bank_info)
+
+            process_update= "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
+            DB.Query(DB,process_update,p_key[0][0],source_account_no,'Banka','Kredi Ödemesi',float(source_exchange[0][0])*float(number_of_month)*float(monthly_debt),source_account_balance,bank_info[0][0],bank_info[0][1])
+
+            self.load()
+            
+
+
+            
+        except AttributeError:
+            QMessageBox.about(self,"AttributeError","Listeden herhangi bir hesap seçimi yapılmadı")
+        
 
 
 
