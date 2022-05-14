@@ -594,7 +594,7 @@ class money_transfer(QWidget):
             t_amount = DB.Query(DB,target_account_amount,target_account_no)
 
             #tarih alımı
-            bank_date = "SELECT banka_tarih FROM public.banka_bilgisi_tablosu WHERE banka_id = 0"
+            bank_date = "SELECT banka_tarih FROM public.banka_bilgisi_tablosu WHERE banka_id = 1"
             bank_date = DB.Query(DB,bank_date)
 
             #işlemi işlemler tablosuna ekle
@@ -732,7 +732,7 @@ class user_credit_info(QWidget):
             DB.Query(DB,source_update,(total_payment+total_interest)/float(source_exchange[0][0]),source_account_no)
 
             #Bankayı güncelle
-            target_update= "UPDATE public.banka_bilgisi_tablosu SET banka_anapara=banka_anapara+%s WHERE banka_id = 0"
+            target_update= "UPDATE public.banka_bilgisi_tablosu SET banka_anapara=banka_anapara+%s WHERE banka_id = 1"
             DB.Query(DB,target_update,(total_payment+total_interest))
 
             #Krediyi güncelle
@@ -746,7 +746,7 @@ class user_credit_info(QWidget):
             p_key_q="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu"
             p_key = DB.Query(DB,p_key_q)
             
-            bank_info = "SELECT banka_anapara, banka_tarih FROM public.banka_bilgisi_tablosu WHERE banka_id = 0"
+            bank_info = "SELECT banka_anapara, banka_tarih FROM public.banka_bilgisi_tablosu WHERE banka_id = 1"
             bank_info = DB.Query(DB,bank_info)
 
             process_update= "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
