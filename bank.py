@@ -59,7 +59,9 @@ class MainWindow(QMainWindow):
              
         System=menubar.addMenu("Sistem")
         forward_system=QAction("Sistemi İlerletme",self)
+        database_system=QAction("Sistem veritabanı",self)
         System.addAction(forward_system)
+        System.addAction(database_system)
 
         customer.triggered.connect(self.response)
         bank_info.triggered.connect(self.response)
@@ -92,6 +94,9 @@ class MainWindow(QMainWindow):
         elif action.text() == "Sistemi İlerletme":
             tabtitle = action.text() 
             self.open.new_tab(forward_system(),tabtitle)
+        elif action.text() == "Sistem veritabanı":
+            tabtitle = action.text() 
+            self.open.new_tab(database_system(),tabtitle)
             
 
     
@@ -521,7 +526,21 @@ class forward_system(QWidget):
         QMessageBox.about(self,"Bildirim","Sistem ilerledi"+time_date)
 
 
+class database_system(QWidget):
+    def __init__(self):
+        super().__init__()
+        f_box = QFormLayout()
+        h_box= QHBoxLayout()
+        
 
+        self.ER_image =QLabel(self)
+        self.ER_image.setPixmap(QtGui.QPixmap("sql.png"))
+        #self.ER_image.setGeometry(0,0,1400,850)
+        h_box.addWidget(self.ER_image)
+
+        f_box.addItem(h_box)
+        self.setLayout(f_box)
+   
 
         
 app = QApplication(sys.argv)
