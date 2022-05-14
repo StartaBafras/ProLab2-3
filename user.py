@@ -24,30 +24,30 @@ class MainWindow(QMainWindow):
         operation=menubar.addMenu("İşlemler")
 
 
-        money_withdraw_deposit= QAction("para yatırma ve çekme",self)
+        money_withdraw_deposit= QAction("Para Yatır ve Çek",self)
 
-        debt_payment=QAction("kredi borçu ödeme",self)
-        money_transfer=QAction("Tranfer yapma",self)
+        debt_payment=QAction("Kredi Borcu Gör ve Öde",self)
+        money_transfer=QAction("Para Tranfer Yap",self)
         operation.addActions([ money_withdraw_deposit,debt_payment,money_transfer ])
         
 
    
         user_info=menubar.addMenu("Bilgi")
         
-        user_credit_info=QAction("kredi borçu bilgisi",self)
-        user_transaction_info = QAction("işlem geçmişi",self)
-        update_user_info = QAction("kişisel bilgi güncelleme",self)
+        #user_credit_info=QAction("kredi borçu bilgisi",self)
+        user_transaction_info = QAction("İşlem Geçmişi",self)
+        update_user_info = QAction("Kişisel Bilgi Güncelle",self)
         
-        user_info.addActions([user_credit_info,user_transaction_info ,update_user_info])
+        user_info.addActions([user_transaction_info ,update_user_info])
         
 
         
 
         user_request=menubar.addMenu("Talep Etme")
 
-        credit_requst_user=QAction("kredi talebi oluştur",self)
-        open_user_account=QAction("hesap açma talebi oluştur",self)
-        delete_user_account=QAction("hesap silme talebi oluştur",self)
+        credit_requst_user=QAction("Kredi Talebi Oluştur",self)
+        open_user_account=QAction("Hesap Açma Talebi Oluştur",self)
+        delete_user_account=QAction("Hesap Silme Talebi Oluştur",self)
 
         user_request.addActions([credit_requst_user,open_user_account,delete_user_account])
     
@@ -59,31 +59,31 @@ class MainWindow(QMainWindow):
 
 
     def response(self,action):
-        if action.text() == "para yatırma ve çekme":
+        if action.text() == "Para Yatır ve Çek":
             tabtitle = action.text()
             self.open.new_tab(money_withdraw_deposit(),tabtitle)
-        elif action.text() == "kredi borçu ödeme":
-            tabtitle = action.text() 
-            self.open.new_tab(user_credit_info(),tabtitle)
-        elif action.text() == "Tranfer yapma":
+        #elif action.text() == "kredi borçu ödeme":
+        #    tabtitle = action.text() 
+        #    self.open.new_tab(user_credit_info(),tabtitle)
+        elif action.text() == "Para Tranfer Yap":
             tabtitle = action.text() 
             self.open.new_tab(money_transfer(),tabtitle)
-        elif action.text() == "kredi borçu bilgisi":
+        elif action.text() == "Kredi Borcu Gör ve Öde":
             tabtitle = action.text() 
             self.open.new_tab(user_credit_info(),tabtitle)
-        elif action.text() == "işlem geçmişi":
+        elif action.text() == "İşlem Geçmişi":
             tabtitle = action.text() 
             self.open.new_tab(user_transaction_info(),tabtitle)
-        elif action.text() == "kişisel bilgi güncelleme":
+        elif action.text() == "Kişisel Bilgi Güncelle":
             tabtitle = action.text() 
             self.open.new_tab(update_user_info(),tabtitle)
-        elif action.text() == "kredi talebi oluştur":
+        elif action.text() == "Kredi Talebi Oluştur":
             tabtitle = action.text() 
             self.open.new_tab(credit_requst_user(),tabtitle)
-        elif action.text() == "hesap açma talebi oluştur":
+        elif action.text() == "Hesap Açma Talebi Oluştur":
             tabtitle = action.text() 
             self.open.new_tab(open_user_account(),tabtitle)
-        elif action.text() == "hesap silme talebi oluştur":
+        elif action.text() == "Hesap Silme Talebi Oluştur":
             tabtitle = action.text() 
             self.open.new_tab(delete_user_account(),tabtitle)
 
@@ -91,7 +91,7 @@ class Window(QWidget):
     def __init__(self):
         super().__init__()
         self.tabwidget=QTabWidget()
-        self.tabwidget.addTab(money_withdraw_deposit(),"para yatırma ve çekme")
+        self.tabwidget.addTab(money_withdraw_deposit(),"Para Yatır ve Çek")
         self.tabwidget.setTabsClosable(True)
         h_box=QHBoxLayout()
         h_box.addWidget(self.tabwidget)
@@ -112,7 +112,7 @@ class credit_requst_user(QWidget): ## Şu anki faiz oranı ekrana yazdırılacak
         self.main_money_i = QLineEdit()
         
         
-        self.credit_term = QLabel("vade sayısı/ay")
+        self.credit_term = QLabel("Vade Sayısı/Ay")
         self.credit_term_i = QLineEdit()
 
         self.save_button = QPushButton("Kayıt Et")
@@ -171,7 +171,7 @@ class user_transaction_info(QWidget):
 
         self.table.horizontalHeader().setStretchLastSection(True) 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.load_button = QPushButton("İşlemleri  gör")
+        self.load_button = QPushButton("İşlemleri  Gör")
         self.load_button.clicked.connect(self.load)
 
    
@@ -204,11 +204,11 @@ class open_user_account(QWidget):
             self.combo_kind.addItem(str(i[1])) 
         
         self.kind_label=QLabel()
-        self.kind_label.setText("Hesap türü seçiniz")
+        self.kind_label.setText("Hesap Türü Seçiniz")
 
 
 
-        self.save_button = QPushButton("talep oluştur")
+        self.save_button = QPushButton("Talep Oluştur")
         self.save_button.clicked.connect(self.request)  
         f_box.addWidget(self.kind_label)
         f_box.addWidget(self.combo_kind)
@@ -324,9 +324,9 @@ class money_withdraw_deposit(QWidget):
 
         self.amount_money = QLabel("TUTAR:")
         self.amount_money_i = QLineEdit("0")
-        self.push_button = QPushButton("parayı yatır ")
+        self.push_button = QPushButton("Parayı Yatır ")
         self.push_button.clicked.connect(self.push)
-        self.pull_button = QPushButton("parayı çek ")
+        self.pull_button = QPushButton("Parayı Çek ")
         self.pull_button.clicked.connect(self.pull)
 
 
@@ -385,7 +385,7 @@ class money_withdraw_deposit(QWidget):
             bank_date = DB.Query(DB,bank_date)
             
             save_process_q = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Çekme',amount,balance,amount_new,bank_date)
+            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Çekme',amount,balance,'NULL',bank_date)#NULL = amount_new
 
             QMessageBox.about(self,"Bildirim",str(amount) + exchange_rate +" çekildi")
             self.load()
@@ -416,7 +416,7 @@ class money_withdraw_deposit(QWidget):
             bank_date = DB.Query(DB,bank_date)
                 
             save_process_q = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Yatırma',amount,balance,amount_new,bank_date)
+            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Yatırma',amount,'NULL',amount_new,bank_date)# NULL=balance
 
             QMessageBox.about(self,"Bildirim",str(amount) + exchange_rate +" yatırıldı")
             self.load()
@@ -440,7 +440,7 @@ class debt_payment(QWidget):
 
         self.amount_money = QLabel("Taksit Tutarı :")
         self.amount_money_i = QLineEdit("0")
-        self.push_button = QPushButton("Borcu yatır ")
+        self.push_button = QPushButton("Borcu Yatır ")
         self.push_button.clicked.connect(self.push)
 
         h_box.addWidget(self.push_button)
@@ -502,7 +502,7 @@ class money_transfer(QWidget):
 
         self.amount_money = QLabel("TUTAR :")
         self.amount_money_i = QLineEdit("0")
-        self.push_button = QPushButton("Taranfer yap ")
+        self.push_button = QPushButton("Taranfer Yap ")
         self.push_button.clicked.connect(self.push)
 
         h_box.addWidget(self.push_button)
@@ -587,7 +587,7 @@ class money_transfer(QWidget):
             process_update= "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
             DB.Query(DB,process_update,p_key[0][0],source_account_no,target_account_no,'Para Aktarma',amount,source_account_amount,t_amount[0][0],bank_date[0][0])
 
-            QMessageBox.about(self,"bildirim","Para Transferi yapıldı")
+            QMessageBox.about(self,"Bildirim","Para Transferi Yapıldı")
             self.load()
 
         except AttributeError:
@@ -619,7 +619,7 @@ class user_credit_info(QWidget):
 
         self.amount_money = QLabel("Taksit Tutarı :")
         self.amount_money_i = QLineEdit("0")
-        self.push_button = QPushButton("Borcu yatır ")
+        self.push_button = QPushButton("Borcu Yatır ")
         self.push_button.clicked.connect(self.push)
 
         h_box.addWidget(self.push_button)
@@ -660,7 +660,7 @@ class user_credit_info(QWidget):
 
             target_no= self.table.item(self.table.currentRow(),0).text()
             monthly_debt = self.table.item(self.table.currentRow(),1).text()
-            target_exchange = self.table.item(self.table.currentRow(),2).text()
+            total_debt = self.table.item(self.table.currentRow(),2).text()
             delay = self.table.item(self.table.currentRow(),3).text()
             
             source_account_no = self.raw_data[self.combo_kind.currentIndex()][0]
@@ -679,6 +679,7 @@ class user_credit_info(QWidget):
             total_interest = 0
             total_installment = float(number_of_month)
 
+            #Gecikme ödemesi
             if(int(raw_data[0][9]) >0):
                 
 
@@ -693,7 +694,8 @@ class user_credit_info(QWidget):
 
                 total_installment -= lateness
             
-            if(total_installment >0):
+            #Normal Aylık Ödeme
+            if(total_installment > 0 and float(total_debt) > 0 and float(total_debt)- (total_payment+total_interest) > 0):
 
 
                 
@@ -701,13 +703,16 @@ class user_credit_info(QWidget):
                 total_interest += float(monthly_debt)*(float(raw_data[0][3])/100)
 
                 total_installment -= 1
-            
-            if(total_installment > 0):
+            #ek ödeme
+            if(total_installment > 0  and float(total_debt) > 0 and float(total_debt)- (total_payment+total_interest) > 0):
             
                 total_payment += float(monthly_debt)*total_installment
 
 
-
+            if(total_payment+total_interest == 0):
+                QMessageBox.about(self,"Borç Ödenemez","Kredi borcu tamamlanmıştır borç ödemesi yapılamaz")
+                return 1
+            
             #Kaynaktan parayı eksilt
             source_update="UPDATE public.müşteri_hesap_tablosu SET bakiye=bakiye-%s  WHERE hesap_id=%s;"
             DB.Query(DB,source_update,(total_payment+total_interest)/float(source_exchange[0][0]),source_account_no)
@@ -831,11 +836,11 @@ class Login(QDialog):
         self.setWindowTitle("Giriş")
         f_box = QVBoxLayout(self)
         self.setMinimumSize(300,200)
-        self.user =QLabel("müşteri no")
-        self.password =QLabel("sifre")
+        self.user =QLabel("Müşteri No/T.C.")
+        self.password =QLabel("Şifre")
         self.user_i = QLineEdit(self)
         self.password_i = QLineEdit(self)
-        self.buttonLogin = QPushButton('Login', self)
+        self.buttonLogin = QPushButton('Giriş', self)
         self.buttonLogin.clicked.connect(self.login_control)
         
         f_box.addWidget(self.user)
