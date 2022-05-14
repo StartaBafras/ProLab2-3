@@ -280,7 +280,7 @@ class update_salary(QWidget):
         self.raw_data=DB.Query(DB,query)
         if(self.raw_data==None  or self.raw_data== [] ):
             query="INSERT INTO public.maaş_tablosu(maaş_id, maaş_miktarı)VALUES (%s, %s);"
-            raw_data=DB.Query(DB,query,1,4000)
+            self.raw_data=DB.Query(DB,query,1,4000)
 
 
         self.textlabel=QLabel()
