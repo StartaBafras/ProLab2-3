@@ -385,7 +385,7 @@ class money_withdraw_deposit(QWidget):
             bank_date = DB.Query(DB,bank_date)
             
             save_process_q = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Çekme',amount,balance,'NULL',bank_date)#NULL = amount_new
+            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Çekme',amount,balance,0,bank_date)#NULL = amount_new
 
             QMessageBox.about(self,"Bildirim",str(amount) + exchange_rate +" çekildi")
             self.load()
@@ -416,7 +416,7 @@ class money_withdraw_deposit(QWidget):
             bank_date = DB.Query(DB,bank_date)
                 
             save_process_q = "INSERT INTO public.işlem_tablosu (islem_no_id, islem_kaynak, islem_hedef, işlem_çeşidi, tutar, kaynak_bakiye, hedef_bakiye, tarih) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
-            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Yatırma',amount,'NULL',amount_new,bank_date)# NULL=balance
+            DB.Query(DB,save_process_q,p_key[0][0],account_no,user_name[0][0],'Para Yatırma',amount,balance,amount_new,bank_date)# NULL=balance
 
             QMessageBox.about(self,"Bildirim",str(amount) + exchange_rate +" yatırıldı")
             self.load()
