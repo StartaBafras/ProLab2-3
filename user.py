@@ -661,6 +661,7 @@ class user_credit_info(QWidget):
             target_no= self.table.item(self.table.currentRow(),0).text()
             monthly_debt = self.table.item(self.table.currentRow(),1).text()
             target_exchange = self.table.item(self.table.currentRow(),2).text()
+            delay = self.table.item(self.table.currentRow(),3).text()
             
             source_account_no = self.raw_data[self.combo_kind.currentIndex()][0]
             source_account_balance = self.raw_data[self.combo_kind.currentIndex()][1]
@@ -719,7 +720,7 @@ class user_credit_info(QWidget):
             credit_update = "UPDATE public.kredi_tablosu SET ödenen_ana_para=ödenen_ana_para+%s,ödenen_ay = ödenen_ay + %s, ödenen_faiz = %s,gecikme_ayı = gecikme_ayı- %s  WHERE kredi_id=%s;"
             #DB.Query(DB,credit_update,float(source_exchange[0][0])*float(number_of_month)*float(monthly_debt),monthly_debt,monthly_debt,target_no)
 
-            DB.Query(DB,credit_update,total_payment,monthly_debt,total_interest,monthly_debt,target_no)
+            DB.Query(DB,credit_update,total_payment,monthly_debt,total_interest,number_of_month,target_no)
 
 
             #Kayıtlara ekle
