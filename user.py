@@ -500,8 +500,10 @@ class money_transfer(QWidget):
 
         
         # query = "SELECT DISTINCT h.hesap_id, isim_soyisim, kur_ismi FROM public.müşteri_hesap_tablosu as h INNER JOIN  public.müşteri_bilgisi_tablosu as b ON h.hesap_id::CHARACTER = b.müsteri_no_tc INNER JOIN public.kurlar_tablosu as k ON k.kur_id = h.hesap_türü WHERE h.hesap_id <> %s"
-        query ="SELECT DISTINCT h.hesap_id, isim_soyisim, kur_ismi FROM public.müşteri_hesap_tablosu as h INNER JOIN  public.müşteri_bilgisi_tablosu as b ON h.müşteri_no::CHARACTER = b.müsteri_no_tc INNER JOIN public.kurlar_tablosu as k ON k.kur_id = h.hesap_türü WHERE isim_soyisim <> %s"
-        self.raw_data=DB.Query(DB,query,active_user_name) 
+        #query ="SELECT DISTINCT h.hesap_id, isim_soyisim, kur_ismi FROM public.müşteri_hesap_tablosu as h INNER JOIN  public.müşteri_bilgisi_tablosu as b ON h.müşteri_no::CHARACTER = b.müsteri_no_tc INNER JOIN public.kurlar_tablosu as k ON k.kur_id = h.hesap_türü WHERE isim_soyisim <> %s"
+        query ="SELECT DISTINCT h.hesap_id, isim_soyisim, kur_ismi FROM public.müşteri_hesap_tablosu as h INNER JOIN  public.müşteri_bilgisi_tablosu as b ON h.müşteri_no::CHARACTER = b.müsteri_no_tc INNER JOIN public.kurlar_tablosu as k ON k.kur_id = h.hesap_türü WHERE b.müsteri_no_tc <> %s"
+        self.raw_data=DB.Query(DB,query,active_user_no) 
+        #self.raw_data=DB.Query(DB,query,active_user_name) 
 
 
         
