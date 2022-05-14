@@ -435,7 +435,7 @@ class bank_transaction(QWidget):
                       
             total_amount+=len(wanted_list)
             
-            if( total_amount>len(will_want)  ):
+            if( total_amount>len(will_want) or  1==len(wanted_list) ):
                 break
             
             total_list.append(wanted_list)         
