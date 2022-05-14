@@ -1,4 +1,5 @@
-from types import NoneType
+
+NoneType=type(None)
 from PyQt5.QtWidgets import QTabWidget,QWidget,QApplication,QHBoxLayout,QMainWindow,QAction,QFormLayout,QDateEdit,QDateTimeEdit,QHeaderView,QDateTimeEdit
 from PyQt5.QtWidgets import QLabel,QLineEdit,QRadioButton,QPushButton,QMessageBox,QSpinBox,QVBoxLayout,QComboBox,QSpinBox,QTableWidget,QTableWidgetItem,QDialog
 from PyQt5.QtCore import QDate,QDateTime,Qt
@@ -180,11 +181,20 @@ class user_transaction_info(QWidget):
         f_box.addWidget(self.table)
         f_box.addItem(h_box)
         self.setLayout(f_box)
+        self.load()
     def load(self):
-        query="SELECT * FROM public.işlem_tablosu ;"
-        raw_data=DB.Query(DB,query,None) 
+        global active_user_no
+        query="SELECT * from işlem_tablosu where islem_kaynak In  (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h where h.müşteri_no=b.müsteri_no_tc  and b.müsteri_no_tc = %s ) ;;"
+        raw_data=DB.Query(DB,query,active_user_no) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
+            self.table.insertRow(row_number)
+            for column_number, data in enumerate(row_data):
+                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+        
+        query="SELECT * from işlem_tablosu where islem_hedef In  (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h where h.müşteri_no=b.müsteri_no_tc  and b.müsteri_no_tc = %s ) ;;"
+        raw_data_2=DB.Query(DB,query,active_user_no) 
+        for row_number, row_data in enumerate(raw_data_2):
             self.table.insertRow(row_number)
             for column_number, data in enumerate(row_data):
                 self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
