@@ -4,6 +4,8 @@ from PyQt5.QtCore import QDate,QDateTime,Qt
 from PyQt5 import QtGui
 import sys
 
+import numpy as np
+
 from DataAccess.data import DB
 
 
@@ -394,45 +396,47 @@ class bank_transaction(QWidget):
         for j in  range(0,len(raw_data)):
             will_want.append(raw_data[j][0])
 
-
-
-
-        first_wanted=raw_data[0][1]
-        wanted=raw_data[0][1]
-        wanted_index=0
-        wanted_list=[]
-        wanted_list.append(0)
-
-
-        i=0
-        while i<len(raw_data):
-            if(wanted == raw_data[i][2] ):
-                if(first_wanted==raw_data[i][2] ):
-                    print("as")
-                wanted= raw_data[i][1]
-                print(wanted)
-                wanted_index=i
-                wanted_list.append(raw_data[i][0])
-                print(wanted_index)
-                i=0 
-            i+=1  
-                
-        print(wanted_list)
-        for k in wanted_list:
-            will_want.remove(k)
-        print(will_want)
-        QMessageBox.about(self,"Bildirim","Sistem ilerledi"+str(wanted_list))
-
-            
-
-
-
-        print(raw_data)
-        print("ad")
+        loop_amount=len(raw_data)
+        total_list=[]
+        next_wanted_amount=0
         
-      
+        
+        total_amount=0
+        for k in range(0,loop_amount-1):
+            wanted_list=[]              
+                        
+            first_wanted=raw_data[k+next_wanted_amount][1]
+            wanted=raw_data[k+next_wanted_amount][1]                        
+            wanted_list.append(k)
 
 
+            i=0
+            while i<len(raw_data):
+                if(wanted == raw_data[i][2] ):
+                    if(first_wanted==raw_data[i][2] and first_wanted!=wanted):
+                        break
+                        
+                    wanted= raw_data[i][1]
+                    print("*"+wanted)
+                    
+                    if(wanted_list[0]==raw_data[i][0] ):
+                        break
+                    wanted_list.append(raw_data[i][0])
+                    i=0 
+                i+=1  
+
+
+            next_wanted_amount=len(wanted_list)-1
+                      
+            total_amount+=len(wanted_list)
+            
+            if( total_amount>len(will_want)  ):
+                break
+            
+            total_list.append(wanted_list)         
+            del wanted_list
+         
+        QMessageBox.about(self,"Bildirim","Analiz yapıldı: \n \t"+str(total_list))
 
 class bank_state_info(QWidget):
     def __init__(self):
