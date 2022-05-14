@@ -583,7 +583,7 @@ class money_transfer(QWidget):
             
             #Hedefi güncelle
             target_update="UPDATE public.müşteri_hesap_tablosu SET bakiye=bakiye+%s  WHERE hesap_id=%s;"
-            DB.Query(DB,target_update,((int(amount)*target_exchange[0][0])/float(source_exchange[0][0])),target_account_no)
+            DB.Query(DB,target_update,((int(amount)*source_exchange[0][0])/float(target_exchange[0][0])),target_account_no)
 
             #anahtarı bul
             p_key_q="SELECT COUNT(islem_no_id) FROM public.işlem_tablosu"
