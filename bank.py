@@ -470,12 +470,23 @@ class bank_state_info(QWidget):
 
     def load(self):
         query="SELECT  banka_anapara FROM public.banka_bilgisi_tablosu;"
+
+        income_q = "SELECT SUM(tutar) FROM public.işlem_tablosu WHERE islem_hedef = 'Banka'"
+        income =  DB.Query(DB,income_q) 
+
+        expense_q = "SELECT SUM(tutar) FROM public.işlem_tablosu WHERE islem_kaynak = 'BANKA'"
+        expense =  DB.Query(DB,expense_q) 
+
+
         raw_data=DB.Query(DB,query,None) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
-            for column_number, data in enumerate(row_data):
-                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+            
+            self.table.setItem(row_number,0,QTableWidgetItem(str(raw_data[0][0])))
+            self.table.setItem(row_number,1,QTableWidgetItem(str(income[0][0])))
+            self.table.setItem(row_number,2,QTableWidgetItem(str(expense[0][0])))
+
 
 
 
