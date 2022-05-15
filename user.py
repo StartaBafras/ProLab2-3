@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
         debt_payment=QAction("Kredi Borcu Gör ve Öde",self)
         money_transfer=QAction("Para Tranfer Yap",self)
         operation.addActions([ money_withdraw_deposit,debt_payment,money_transfer ])
-        
+
 
    
         user_info=menubar.addMenu("Bilgi")
@@ -155,7 +155,7 @@ class credit_requst_user(QWidget): ## Şu anki faiz oranı ekrana yazdırılacak
 
         except IndexError:
                 QMessageBox.about(self,"Hata","İndex Hatası")
-        
+
 
 
 
@@ -615,9 +615,9 @@ class user_credit_info(QWidget):
         super().__init__()  
         f_box = QFormLayout()
         h_box = QHBoxLayout()
-        table_headers=["Kredi No","Aylık Borç ","Kalan Toplam Borç","Gecikmiş Ödeme (Ay)","Alınan Toplam Para (₺)","Faiz Oranı (%)"]
+        table_headers=["Kredi No","Aylık Borç (Ana Para)","Kalan Toplam Borç","Gecikmiş Ödeme (Ay)","Alınan Toplam Para (₺)","Ödenen Ana Para","Ödenen Faiz","Faiz Oranı (%)"]
         self.table = QTableWidget()
-        self.table.setColumnCount(6)
+        self.table.setColumnCount(8)
         for col_number, col_data in enumerate(table_headers):
             self.table.setHorizontalHeaderItem(col_number,QTableWidgetItem(str(col_data)))
 
@@ -646,8 +646,11 @@ class user_credit_info(QWidget):
         self.load()
 
     def load(self):
+
+        #query="SELECT kredi_id, TRUNC((alınna_ana_para+(alınna_ana_para*faiz_oranı/100))/vade_sayısı), TRUNC(alınna_ana_para+(alınna_ana_para*faiz_oranı/100))-ödenen_ana_para-ödenen_faiz,gecikme_ayı, TRUNC(alınna_ana_para+(alınna_ana_para*faiz_oranı/100)), faiz_oranı FROM public.kredi_tablosu WHERE kredi_sahibi_no = %s ;"
+
         #ALınan kredileri listele
-        query="SELECT kredi_id, TRUNC((alınna_ana_para+(alınna_ana_para*faiz_oranı/100))/vade_sayısı), TRUNC(alınna_ana_para+(alınna_ana_para*faiz_oranı/100))-ödenen_ana_para-ödenen_faiz,gecikme_ayı, TRUNC(alınna_ana_para+(alınna_ana_para*faiz_oranı/100)), faiz_oranı FROM public.kredi_tablosu WHERE kredi_sahibi_no = %s ;"
+        query="SELECT kredi_id, TRUNC(alınna_ana_para/vade_sayısı), TRUNC((ödenen_ay- kredi_tablosu.vade_sayısı)*alınna_ana_para/kredi_tablosu.vade_sayısı),gecikme_ayı, TRUNC(alınna_ana_para+(alınna_ana_para*faiz_oranı/100)), ödenen_ana_para, ödenen_faiz,faiz_oranı FROM public.kredi_tablosu WHERE kredi_sahibi_no = %s ;"
         raw_data=DB.Query(DB,query,active_user_no) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
@@ -739,7 +742,7 @@ class user_credit_info(QWidget):
             credit_update = "UPDATE public.kredi_tablosu SET ödenen_ana_para=ödenen_ana_para+%s,ödenen_ay = ödenen_ay + %s, ödenen_faiz = %s,gecikme_ayı = gecikme_ayı- %s  WHERE kredi_id=%s;"
             #DB.Query(DB,credit_update,float(source_exchange[0][0])*float(number_of_month)*float(monthly_debt),monthly_debt,monthly_debt,target_no)
 
-            DB.Query(DB,credit_update,total_payment,monthly_debt,total_interest,number_of_month,target_no)
+            DB.Query(DB,credit_update,total_payment,number_of_month,total_interest,number_of_month,target_no)
 
 
             #Kayıtlara ekle
