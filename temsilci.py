@@ -391,14 +391,26 @@ class customer_request_account_open(QWidget):
             
             query="UPDATE public.hesap_açma_talep_tablosu SET  talep_durumu=2 WHERE talep_id=%s;"
             DB.Query(DB,query,request_no )
-            query="SELECT COUNT(hesap_id) FROM public.müşteri_hesap_tablosu;"
+            query="SELECT hesap_id FROM public.müşteri_hesap_tablosu WHERE hesap_id >= all(SELECT hesap_id FROM public.müşteri_hesap_tablosu);"
             amount=DB.Query(DB,query,None)
-            a=amount[0][0]
-            a=a+1
-            query="INSERT INTO public.müşteri_hesap_tablosu (hesap_id, müşteri_no, hesap_türü, bakiye) VALUES (%s, %s, %s, %s);"
-            DB.Query(DB,query,a,user_no,account_kind,0)
-            QMessageBox.about(self,"bildirim"," Talep onaylandı")
-            
+            control_zero = len(amount) # İlk giriş olup olmadığı kontrol ediliyor 
+
+            try:
+                if control_zero == 0:
+                    query="INSERT INTO public.müşteri_hesap_tablosu (hesap_id, müşteri_no, hesap_türü, bakiye) VALUES (%s, %s, %s, %s);"
+                    DB.Query(DB,query,1,user_no,account_kind,0)
+
+                    QMessageBox.about(self,"bildirim"," Talep onaylandı")
+
+                else:
+                    a=amount[0][0]
+                    a=a+1
+                    query="INSERT INTO public.müşteri_hesap_tablosu (hesap_id, müşteri_no, hesap_türü, bakiye) VALUES (%s, %s, %s, %s);"
+                    DB.Query(DB,query,a,user_no,account_kind,0)
+                    QMessageBox.about(self,"bildirim"," Talep onaylandı")
+
+            except IndexError:
+                QMessageBox.about(self,"Hata","İndex Hatası")    
             self.load()
 
         
