@@ -251,6 +251,12 @@ class customer_transaction(QWidget):
 
         self.month = QLabel("Getirilecek Ay Sayısı")
         self.month_i = QLineEdit("12")
+        
+        self.kind_label=QLabel()
+        self.kind_label.setText("Müşteri Seçiniz")
+
+        self.combo_kind = QComboBox(self)
+
 
         self.load_button = QPushButton("İşlemleri  gör")
         self.load_button.clicked.connect(self.load)
@@ -261,11 +267,28 @@ class customer_transaction(QWidget):
         f_box.addWidget(self.table)
         f_box.addWidget(self.month)
         f_box.addWidget(self.month_i)
+        f_box.addWidget(self.kind_label)
+        f_box.addWidget(self.combo_kind)
+
         f_box.addItem(h_box)
         self.setLayout(f_box)
+
+
+        query_c="SELECT  isim_soyisim, müsteri_no_tc FROM public.müşteri_bilgisi_tablosu WHERE temsilci_id = %s"
+        query_c=DB.Query(DB,query_c,active_customer_agent_no) 
+
+        self.combo_kind.clear()
+        for i in query_c:
+            self.combo_kind.addItem(str(i[0]))
+
         self.load()
 
     def load(self):
+        
+
+
+
+        print(self.combo_kind.currentIndex())
 
         q_date="SELECT * FROM public.banka_bilgisi_tablosu ORDER BY banka_id ASC "
         date_data=DB.Query(DB,q_date)
@@ -274,20 +297,30 @@ class customer_transaction(QWidget):
 
         date = QDateEdit((QDate(date_data[0][2]).addDays(int(month)*-1*30)))
 
-        query="SELECT * from işlem_tablosu where tarih > %s and islem_kaynak In  (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) ;"
-        raw_data=DB.Query(DB,query,date.text(),active_customer_agent_no) 
+        query="SELECT * from işlem_tablosu where tarih > %s and islem_kaynak = %s or islem_hedef = %s and islem_kaynak In  (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) ;"
+        raw_data=DB.Query(DB,query,date.text(),(str(int(self.combo_kind.currentIndex())+1)),(str(int(self.combo_kind.currentIndex())+1)),active_customer_agent_no) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
             for column_number, data in enumerate(row_data):
                 self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
-                
-        query=" SELECT * from işlem_tablosu where tarih > %s and islem_hedef In (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) "
+        """       
+        query=" SELECT  * from işlem_tablosu where tarih > %s and islem_hedef In (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) "
         raw_data=DB.Query(DB,query,date.text(),active_customer_agent_no) 
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
             for column_number, data in enumerate(row_data):
-                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))""" 
+
+        query_c="SELECT  isim_soyisim, müsteri_no_tc FROM public.müşteri_bilgisi_tablosu WHERE temsilci_id = %s"
+        query_c=DB.Query(DB,query_c,active_customer_agent_no) 
+
+        self.combo_kind.clear()
+        for i in query_c:
+            self.combo_kind.addItem(str(i[0]))
+        
+
+        
 
 class customer_state_info(QWidget):
     def __init__(self):
