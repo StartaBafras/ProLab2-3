@@ -310,12 +310,36 @@ class customer_state_info(QWidget):
         query="SELECT  h.müşteri_no, isim_soyisim, sum(bakiye) FROM müşteri_bilgisi_tablosu as b ,müşteri_hesap_tablosu as h WHERE h.müşteri_no=b.müsteri_no_tc  and  temsilci_id=%s group by h.müşteri_no ,isim_soyisim;"
         
         #query="SELECT * from işlem_tablosu where islem_kaynak ::integer In (select  hesap_id from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) ;"
+        income_q =  "SELECT SUM(tutar) FROM public.işlem_tablosu WHERE islem_hedef In (SELECT hesap_id::character FROM public.müşteri_hesap_tablosu WHERE müşteri_no = %s)"
+
+        
+
+        expense_q = "SELECT SUM(tutar) FROM public.işlem_tablosu WHERE islem_kaynak In (SELECT hesap_id::character FROM public.müşteri_hesap_tablosu WHERE müşteri_no = %s)"
+        
+
         raw_data=DB.Query(DB,query,active_customer_agent_no) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
             for column_number, data in enumerate(row_data):
                 self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
+
+        print(self.table.item(0,0).text())
+
+        for row_number, row_data in enumerate(raw_data):
+            for column_number, data in enumerate(row_data):
+                
+                income =  DB.Query(DB,income_q,self.table.item(row_number,0).text())
+                expense =  DB.Query(DB,expense_q,self.table.item(row_number,0).text())
+                
+                self.table.setItem(row_number,3,QTableWidgetItem(str(income[0][0])))
+                self.table.setItem(row_number,4,QTableWidgetItem(str(expense[0][0])))
+
+
+
+
+        
+
 
 
 
