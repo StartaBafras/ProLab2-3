@@ -172,28 +172,53 @@ class user_transaction_info(QWidget):
 
         self.table.horizontalHeader().setStretchLastSection(True) 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+
+        self.month = QLabel("Getirilecek Ay Sayısı")
+        self.month_i = QLineEdit("12")
+
+
         self.load_button = QPushButton("İşlemleri  Gör")
         self.load_button.clicked.connect(self.load)
 
-   
+
+
+
+
         h_box.addWidget(self.load_button)
       
         f_box.addWidget(self.table)
+        f_box.addWidget(self.month)
+        f_box.addWidget(self.month_i)
         f_box.addItem(h_box)
         self.setLayout(f_box)
         self.load()
+
     def load(self):
+
+        q_date="SELECT * FROM public.banka_bilgisi_tablosu ORDER BY banka_id ASC "
+        date_data=DB.Query(DB,q_date)
+
+        month = self.month_i.text()
+
+        date = QDateEdit((QDate(date_data[0][2]).addDays(int(month)*-1*30)))
+        #print(date.text())
+
+
         global active_user_no
-        query="SELECT * from işlem_tablosu where islem_kaynak In  (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h where h.müşteri_no=b.müsteri_no_tc  and b.müsteri_no_tc = %s ) ;;"
-        raw_data=DB.Query(DB,query,active_user_no) 
+        query="SELECT * from işlem_tablosu where tarih > %s and islem_kaynak In  (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h where h.müşteri_no=b.müsteri_no_tc  and b.müsteri_no_tc = %s );"
+        raw_data=DB.Query(DB,query,date.text(),active_user_no) 
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
             for column_number, data in enumerate(row_data):
                 self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
         
-        query="SELECT * from işlem_tablosu where islem_hedef In  (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h where h.müşteri_no=b.müsteri_no_tc  and b.müsteri_no_tc = %s ) ;;"
-        raw_data_2=DB.Query(DB,query,active_user_no) 
+
+
+        
+        query="SELECT * from işlem_tablosu where  tarih > %s and islem_hedef In  (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h where h.müşteri_no=b.müsteri_no_tc  and b.müsteri_no_tc = %s ) ;;"
+        raw_data_2=DB.Query(DB,query,date.text(),active_user_no) 
         for row_number, row_data in enumerate(raw_data_2):
             self.table.insertRow(row_number)
             for column_number, data in enumerate(row_data):
@@ -216,12 +241,13 @@ class open_user_account(QWidget):
         self.kind_label=QLabel()
         self.kind_label.setText("Hesap Türü Seçiniz")
 
-
-
         self.save_button = QPushButton("Talep Oluştur")
         self.save_button.clicked.connect(self.request)  
+
+
         f_box.addWidget(self.kind_label)
         f_box.addWidget(self.combo_kind)
+
         f_box.addWidget(self.save_button)
         self.setLayout(f_box)
     
