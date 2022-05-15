@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QTabWidget,QWidget,QApplication,QHBoxLayout,QMainWindow,QAction,QFormLayout,QDateEdit,QDateTimeEdit,QHeaderView,QDateTimeEdit
-from PyQt5.QtWidgets import QLabel,QLineEdit,QRadioButton,QPushButton,QMessageBox,QSpinBox,QVBoxLayout,QComboBox,QSpinBox,QTableWidget,QTableWidgetItem
+from PyQt5.QtWidgets import QLabel,QLineEdit,QRadioButton,QPushButton,QMessageBox,QSpinBox,QVBoxLayout,QComboBox,QSpinBox,QTableWidget,QTableWidgetItem,QDialog
 from PyQt5.QtCore import QDate,QDateTime,Qt
 from PyQt5 import QtGui
 import sys
@@ -554,6 +554,52 @@ class database_system(QWidget):
    
 
         
-app = QApplication(sys.argv)
-Win = MainWindow()
-sys.exit(app.exec_())
+class Login(QDialog):
+    def __init__(self, parent=None):
+        super(Login, self).__init__(parent)
+        self.setWindowTitle(" Banak Giriş")
+        f_box = QVBoxLayout(self)
+        self.setMinimumSize(300,200)
+        self.user =QLabel("Banka No")
+        self.password =QLabel("Şifre")
+        self.user_i = QLineEdit(self)
+        self.password_i = QLineEdit(self)
+        self.buttonLogin = QPushButton('GİRİŞ ', self)
+        self.buttonLogin.clicked.connect(self.login_control)
+        
+        f_box.addWidget(self.user)
+        f_box.addWidget(self.user_i)
+        f_box.addWidget(self.password)
+        f_box.addWidget(self.password_i)
+        f_box.addWidget(self.buttonLogin)
+        self.setLayout(f_box)
+
+    def login_control(self):
+        global active_customer_agent_no
+        global active_customer_agent_name
+
+        user=self.user_i.text()
+        password=self.password_i.text()
+        
+        query="SELECT * FROM public.banka_müdür_tablosu where banka_müdür_id=%s and şifre =%s "
+        result=DB.Query(DB,query,user,password)
+       
+        if(result == [] or result==None):
+            QMessageBox.warning(
+                self, 'Error', 'kullanıcı no veya şifre yanlış')
+        else:
+            
+            active_customer_agent_no=result[0][0]
+            active_customer_agent_name=result[0][1]
+            self.accept()
+            
+
+
+if __name__ == '__main__':
+
+    app = QApplication(sys.argv)
+    login = Login()
+
+    if login.exec_() == QDialog.Accepted:
+        Win = MainWindow()
+        sys.exit(app.exec_())
