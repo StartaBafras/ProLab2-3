@@ -469,16 +469,20 @@ class bank_state_info(QWidget):
 
 
     def load(self):
-        query="SELECT  banka_anapara FROM public.banka_bilgisi_tablosu;"
+        query="SELECT  banka_anapara,banka_tarih FROM public.banka_bilgisi_tablosu;"
+        raw_data=DB.Query(DB,query,None)
+        date = QDateEdit((QDate(raw_data[0][1]).addDays(1*-1*30)))
+        print(date.text())
 
-        income_q = "SELECT SUM(tutar) FROM public.işlem_tablosu WHERE islem_hedef = 'Banka'"
-        income =  DB.Query(DB,income_q) 
+        
+        income_q = "SELECT SUM(tutar) FROM public.işlem_tablosu WHERE islem_hedef = 'Banka' AND tarih > %s"
+        income =  DB.Query(DB,income_q,date.text())
 
-        expense_q = "SELECT SUM(tutar) FROM public.işlem_tablosu WHERE islem_kaynak = 'BANKA'"
-        expense =  DB.Query(DB,expense_q) 
+        expense_q = "SELECT SUM(tutar) FROM public.işlem_tablosu WHERE islem_kaynak = 'BANKA' AND tarih > %s" 
+        expense =  DB.Query(DB,expense_q,date.text()) 
 
 
-        raw_data=DB.Query(DB,query,None) 
+        
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
