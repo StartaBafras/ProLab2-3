@@ -180,7 +180,7 @@ class add_customer(QWidget):
         phone = self.user_phone_i.text()
         mail = self.user_mail_i.text()
         address=self.user_address_i.text()
-        query="INSERT INTO public.müşteri_bilgisi_tablosu (müsteri_no_tc, isim_soyisim, şifre, telefon_no, e_posta, adres) VALUES (%s,%s, %s, %s,%s, %s);"
+        query="INSERT INTO public.müşteri_bilgisi_tablosu (müsteri_no_tc, isim_soyisim, şifre, telefon_no, e_posta, adres,temsilci_id) VALUES (%s,%s, %s, %s,%s, %s,%s);"
         DB.Query(DB,query,user_No,name,password,phone,mail,address,raw_data[0][0]) 
 
         QMessageBox.about(self,"Bildirim","Yeni Müşteri Eklendi")
