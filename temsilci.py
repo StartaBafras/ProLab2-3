@@ -193,7 +193,6 @@ class delete_and_update_customer(QWidget):
         global active_customer_agent_no
         query="SELECT * FROM  public.müşteri_bilgisi_tablosu where temsilci_id = %s ;"
         raw_data=DB.Query(DB,query,active_customer_agent_no)
-        print(raw_data,active_customer_agent_no)
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
@@ -203,16 +202,23 @@ class delete_and_update_customer(QWidget):
         try:
             user_no = self.table.item(self.table.currentRow(),0).text()
             print(user_no)
-            query="DELETE FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc = %s"
-            DB.Query(DB,query,user_no)
-            QMessageBox.about(self,"bildirim"," müşteri silindi")
+            query="SELECT hesap_id,b.müsteri_no_tc FROM public.müşteri_hesap_tablosu as h,müşteri_bilgisi_tablosu as b WHERE b.müsteri_no_tc = h.müşteri_no and h.müşteri_no =%s "
+            raw_data=DB.Query(DB,query,user_no)
+            if(raw_data==None or raw_data==[]):
+                query="DELETE FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc = %s"
+                DB.Query(DB,query,user_no)
+                QMessageBox.about(self,"bildirim"," müşteri silindi")
+            else :
+                QMessageBox.about(self,"bildirim"," müşteri ait hesap mevcut olduğundan müşteri silinemez ")
+
+            
             self.load()
         
         except AttributeError:
             QMessageBox.about(self,"AttributeError","Listeden herhangi bir seçim yapılmadı")
 
     def uptade_func(self):
-        print("sd")
+        
         try:
             user_no = self.table.item(self.table.currentRow(),0).text()  
             name= self.table.item(self.table.currentRow(),1).text()
