@@ -852,17 +852,26 @@ class delete_user_account(QWidget):
             customer_q = "SELECT temsilci_id FROM public.müşteri_bilgisi_tablosu WHERE müsteri_no_tc=%s;"
             customer_id = DB.Query(DB,customer_q,active_user_no)
 
-            query="Select COUNT(talep_id) From public.hesap_silme_talep_tablosu"
+            query="SELECT talep_id FROM public.hesap_silme_talep_tablosu WHERE talep_id >= all(SELECT talep_id FROM public.hesap_silme_talep_tablosu);"
             
-            key_id=DB.Query(DB,query)
-            key=key_id[0]
+            key_id=DB.Query(DB,query,None)
+            control_zero = len(key_id) # İlk giriş olup olmadığı kontrol ediliyor 
 
-            save_request="INSERT INTO public.hesap_silme_talep_tablosu (talep_id, talep_eden_id, talep_edilen_id, silinecek_hesap_no, talep_durumu)VALUES (%s, %s, %s, %s, %s);"
+            try:
+                if control_zero == 0:
+                    save_request="INSERT INTO public.hesap_silme_talep_tablosu (talep_id, talep_eden_id, talep_edilen_id, silinecek_hesap_no, talep_durumu)VALUES (%s, %s, %s, %s, %s);"
+                    DB.Query(DB,save_request,1,active_user_no,customer_id[0][0],account_no,0)
 
-            DB.Query(DB,save_request,key,active_user_no,customer_id[0][0],account_no,0)
+                    QMessageBox.about(self,"Bildirim","Numarası " + account_no+ " olan hesap için hesap silme talebi alındı.")
 
-            QMessageBox.about(self,"Bildirim","Numarası " + account_no+ " olan hesap için hesap silme talebi alındı.")
 
+                else:
+                    save_request="INSERT INTO public.hesap_silme_talep_tablosu (talep_id, talep_eden_id, talep_edilen_id, silinecek_hesap_no, talep_durumu)VALUES (%s, %s, %s, %s, %s);"
+                    DB.Query(DB,save_request,key_id[0][0]+1,active_user_no,customer_id[0][0],account_no,0)
+
+                    QMessageBox.about(self,"Bildirim","Numarası " + account_no+ " olan hesap için hesap silme talebi alındı.")
+            except IndexError:
+                QMessageBox.about(self,"Hata","İndex Hatası")
         except AttributeError:
             QMessageBox.about(self,"AttributeError","Listeden herhangi bir hesap seçimi yapılmadı")
 
