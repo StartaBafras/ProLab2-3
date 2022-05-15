@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
    
         user_info=menubar.addMenu("Bilgi")
         
-        #user_credit_info=QAction("kredi borçu bilgisi",self)
+        #user_credit_info=QAction("kredi borcu bilgisi",self)
         user_transaction_info = QAction("İşlem Geçmişi",self)
         update_user_info = QAction("Kişisel Bilgi Güncelle",self)
         
@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
         if action.text() == "Para Yatır ve Çek":
             tabtitle = action.text()
             self.open.new_tab(money_withdraw_deposit(),tabtitle)
-        #elif action.text() == "kredi borçu ödeme":
+        #elif action.text() == "kredi borcu ödeme":
         #    tabtitle = action.text() 
         #    self.open.new_tab(user_credit_info(),tabtitle)
         elif action.text() == "Para Tranfer Yap":

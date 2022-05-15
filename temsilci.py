@@ -98,7 +98,7 @@ class add_customer(QWidget):
         f_box = QFormLayout()
         
 
-        self.user_no = QLabel("müşteri no/TÇ no")
+        self.user_no = QLabel("müşteri no/Tc no")
         self.user_no_i = QLineEdit()
         
         
@@ -166,7 +166,7 @@ class delete_and_update_customer(QWidget):
         super().__init__()
         f_box = QFormLayout()
         h_box=QHBoxLayout()
-        table_headers=["Müşteri no /T.Ç. no","İsim soyisim","Şifre","Telefon numarası","E-posta","Adres"]
+        table_headers=["Müşteri no /T.C. no","İsim soyisim","Şifre","Telefon numarası","E-posta","Adres"]
          
         self.table = QTableWidget()
         self.table.setColumnCount(6)
