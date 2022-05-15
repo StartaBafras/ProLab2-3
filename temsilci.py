@@ -304,13 +304,13 @@ class customer_transaction(QWidget):
             self.table.insertRow(row_number)
             for column_number, data in enumerate(row_data):
                 self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
-        """       
-        query=" SELECT  * from işlem_tablosu where tarih > %s and islem_hedef In (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) "
-        raw_data=DB.Query(DB,query,date.text(),active_customer_agent_no) 
+               
+        query=" SELECT  * from işlem_tablosu where tarih > %s and islem_kaynak = %s or islem_hedef = %s and islem_hedef In (select   hesap_id :: CHARACTER from müşteri_bilgisi_tablosu as b, müşteri_hesap_tablosu as h,temsilci_tablosu as te where h.müşteri_no=b.müsteri_no_tc and te.temsilci_id=b.temsilci_id and b.temsilci_id=%s ) "
+        raw_data=DB.Query(DB,query,date.text(),(str(int(self.combo_kind.currentIndex())+1)),(str(int(self.combo_kind.currentIndex())+1)),active_customer_agent_no) 
         for row_number, row_data in enumerate(raw_data):
             self.table.insertRow(row_number)
             for column_number, data in enumerate(row_data):
-                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))""" 
+                self.table.setItem(row_number,column_number,QTableWidgetItem(str(data)))
 
         query_c="SELECT  isim_soyisim, müsteri_no_tc FROM public.müşteri_bilgisi_tablosu WHERE temsilci_id = %s"
         query_c=DB.Query(DB,query_c,active_customer_agent_no) 
